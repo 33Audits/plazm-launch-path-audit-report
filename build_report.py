@@ -12,7 +12,7 @@ import pymupdf
 from weasyprint import HTML
 
 ROOT = Path(__file__).resolve().parent
-ISSUES_PATH = ROOT / "sources" / "issues.json"
+ISSUES_PATH = ROOT / "sources" / "issues-refresh.json"
 REPORTS = ROOT / "reports"
 REPORTS.mkdir(parents=True, exist_ok=True)
 OUT_MD = REPORTS / "plazm-launch-path-security-audit-report.md"
@@ -22,15 +22,15 @@ OUT_PDF = REPORTS / "plazm-launch-path-security-audit-report.pdf"
 
 REPO = "BuildTheTech/BackedFund-Contracts"
 REPO_URL = f"https://github.com/{REPO}"
-AUDITED_SHA = "213a6dba2e2641804ed56555d4f6f763dbe95200"
-REMEDIATION_SHA = "a4dee324e9206e1ddb249ddb3329db9a0712cfc7"
-CI_URL = "https://github.com/BuildTheTech/BackedFund-Contracts/actions/runs/39729240593"
-REPORT_DATE = "October 22, 2026"
+AUDITED_SHA = "a4dee324e9206e1ddb249ddb3329db9a0712cfc7"
+REMEDIATION_SHA = "2d210dbfe293a00122de726848c47e4472733bfb"
+CI_URL = "https://github.com/BuildTheTech/BackedFund-Contracts/actions/runs/40078929418"
+REPORT_DATE = "October 24, 2026"
 AUTHORS = [
     {"name": "0x23r0", "role": "Security Researcher", "url": "https://github.com/0x23r0"},
     {"name": "Favour Aniogor", "role": "Security Researcher", "url": "https://github.com/PhantomOz"},
 ]
-PARTIAL = {30, 36}
+PARTIAL = {36, 46}
 
 SEVERITY_ORDER = {"High": 0, "Medium": 1, "Low": 2, "Informational": 3}
 SEVERITY_PREFIX = {"High": "H", "Medium": "M", "Low": "L", "Informational": "I"}
@@ -80,8 +80,8 @@ def latest_review(issue: dict) -> dict:
     return (preferred or issue["comments"])[-1]
 
 
-issues = json.loads(ISSUES_PATH.read_text())
-assert [x["number"] for x in issues] == list(range(29, 46))
+issues = sorted(json.loads(ISSUES_PATH.read_text()), key=lambda x: x["number"])
+assert [x["number"] for x in issues] == list(range(29, 50))
 
 # Assign report-local IDs sequentially inside each severity group while retaining source IDs.
 by_severity: dict[str, list[dict]] = defaultdict(list)
@@ -127,16 +127,16 @@ for sev in sorted(by_severity, key=lambda x: SEVERITY_ORDER[x]):
 
 severity_counts = Counter(f["severity"] for f in findings)
 status_counts = Counter(f["status"] for f in findings)
-assert severity_counts == {"Medium": 2, "Low": 11, "Informational": 4}
-assert status_counts == {"Fixed": 15, "Partially Mitigated": 2}
+assert severity_counts == {"Medium": 2, "Low": 15, "Informational": 4}
+assert status_counts == {"Fixed": 19, "Partially Mitigated": 2}
 
 front = f"""# Plazm Launch-Path Security Audit Report
 
 ## Introduction
 
-33Labs performed a focused review of the Plazm launch path implemented in [`{REPO}`]({REPO_URL}). This report is a separate export of GitHub issues [#29]({REPO_URL}/issues/29) through [#45]({REPO_URL}/issues/45), covering launch settlement, recurring liquidity drips, route capacity, treasury reinvestment, V4 accounting bounds, guardian rotation, sale timing, and creator-supply accounting.
+33Labs performed a focused review of the Plazm launch path implemented in [`{REPO}`]({REPO_URL}). This report is a separate export of GitHub issues [#29]({REPO_URL}/issues/29) through [#49]({REPO_URL}/issues/49), covering launch settlement, recurring liquidity drips, route capacity, treasury reinvestment, OTC capacity and rounding, V4 accounting bounds, guardian rotation, sale timing, and creator-supply accounting.
 
-The review identified **17 findings**: **2 Medium**, **11 Low**, and **4 Informational**. Against remediation snapshot [`{REMEDIATION_SHA}`]({REPO_URL}/commit/{REMEDIATION_SHA}), **15 findings are Fixed** and **2 are Partially Mitigated** with documented residual conditions.
+The review identified **21 findings**: **2 Medium**, **15 Low**, and **4 Informational**. Against remediation snapshot [`{REMEDIATION_SHA}`]({REPO_URL}/commit/{REMEDIATION_SHA}), **19 findings are Fixed** and **2 are Partially Mitigated** with documented residual conditions.
 
 ## Audit Team
 
@@ -163,11 +163,11 @@ The reviewed path coordinates permissionless launches whose raised assets are co
 - **Branch:** `main`
 - **Finding baseline:** [`{AUDITED_SHA}`]({REPO_URL}/commit/{AUDITED_SHA})
 - **Remediation snapshot:** [`{REMEDIATION_SHA}`]({REPO_URL}/commit/{REMEDIATION_SHA})
-- **Source issues:** [#29–#45]({REPO_URL}/issues?q=is%3Aissue+number%3A29..45)
-- **Issue creation window:** October 19–20, 2026
+- **Source issues:** [#29–#49]({REPO_URL}/issues?q=is%3Aissue+number%3A29..49)
+- **Issue creation window:** October 19–22, 2026
 - **Final review date:** {REPORT_DATE}
 
-The report is limited to the behavior documented by those 17 issues and their directly related launch-path code. It does not reopen or duplicate issues #1–#28 from the broader BackedFund report.
+The report is limited to the behavior documented by those 21 issues and their directly related launch-path code. It does not reopen or duplicate issues #1–#28 from the broader BackedFund report.
 
 ## Methodology
 
@@ -175,7 +175,7 @@ The review combined issue-ledger reconstruction, manual source-path analysis, ex
 
 ## Verification Evidence and Limits
 
-[Contracts CI run 39729240593]({CI_URL}) executed on the exact remediation snapshot. Dependency audit, compilation, release-consistency checks, contract-size checks, dead-code checks, type checking, and the unit-test step passed. Exact production coverage later terminated with exit code 134 after a Node.js heap out-of-memory error; deployment replay, the Base Plazm fork job, and the Base protocol end-to-end job were skipped. Individual issue comments also record targeted unit and Base-fork regressions. This report distinguishes that recorded evidence from an independently rerun full suite and does not claim clean full CI or verified deployment state.
+[Contracts CI run 40078929418]({CI_URL}) executed on the exact remediation snapshot. The contracts job failed only at exact production coverage; the Base Plazm fork and Base protocol end-to-end jobs were skipped. Issue-level round-five comments record targeted regressions passing for the updated findings, including Base-fork verification for the reinvestment sandwich case. This report distinguishes those recorded targeted results from an independently rerun full suite and does not claim clean full CI or verified deployment state.
 
 ## Severity Classification
 
@@ -229,14 +229,16 @@ for f in findings:
 
 conclusion = f"""# Conclusion
 
-The Plazm launch-path review identified **17 findings**: **2 Medium**, **11 Low**, and **4 Informational**. At remediation snapshot [`{REMEDIATION_SHA}`]({REPO_URL}/commit/{REMEDIATION_SHA}), **15 findings are Fixed** and **2 are Partially Mitigated**.
+The Plazm launch-path review identified **21 findings**: **2 Medium**, **15 Low**, and **4 Informational**. At remediation snapshot [`{REMEDIATION_SHA}`]({REPO_URL}/commit/{REMEDIATION_SHA}), **19 findings are Fixed** and **2 are Partially Mitigated**.
 
 The two residual items are:
 
-- **M-01 / source M-10 (#30):** the cooldown-progress and spare-slot changes prevent dust-sized calls from consuming a full slot, but repeated half-capacity calls can still exhaust the default settlement window under the reviewer-confirmed scheduling conditions.
 - **L-06 / source L-22 (#36):** the project-token side is bounded by the new maximum total-supply rule, while the counter-asset side still relies on WETH, PLAZM, and approved Build-on-Asset counters remaining below the V4 `int128` amount limit; that requirement is documented but not enforced on-chain.
+- **L-12 / source L-28 (#46):** minimum-size asks, accounting, and expired-order matching are fixed, but an attacker can still create 128 short-lived minimum-size asks to exhaust the scan bound and temporarily deny OTC routing until someone cancels them. The remaining impact is low and the DEX leg continues to work.
 
-The exact-snapshot unit-test step passed, but exact production coverage hit a Node.js heap out-of-memory failure and downstream replay/fork jobs were skipped. Those limitations remain part of the release risk and should not be interpreted as a clean full-CI attestation.
+Issue #49's original partial-OTC slot mismatch is fixed at the remediation snapshot. Its latest review records a separate residual condition in which a maker can withdraw OTC inventory after settlement planning; that condition relies on the spare slot or `extendSettlementWindow` and is retained in the finding evidence rather than misclassified as the original defect.
+
+The exact-snapshot contracts CI job failed at exact production coverage, while downstream fork/end-to-end jobs were skipped. Targeted issue-level regressions passed, including Base-fork verification for the reinvestment sandwich case. Those limitations remain part of the release risk and should not be interpreted as a clean full-CI attestation.
 """
 
 md = front + "\n".join(summary_rows) + "\n\n" + "\n\n".join(finding_sections) + "\n\n" + conclusion
@@ -253,9 +255,9 @@ structured = {
         "branch": "main",
         "audited_sha": AUDITED_SHA,
         "remediation_sha": REMEDIATION_SHA,
-        "source_issue_range": [29, 45],
-        "ci": {"run_url": CI_URL, "unit_tests": "passed", "coverage": "failed: Node.js heap out of memory", "downstream_jobs": "skipped"},
-        "totals": {"findings": 17, "severity": dict(severity_counts), "status": dict(status_counts)},
+        "source_issue_range": [29, 49],
+        "ci": {"run_url": CI_URL, "contracts_job": "failed at exact production coverage", "coverage": "failed", "downstream_jobs": "skipped", "targeted_issue_regressions": "documented as passing; includes Base-fork verification for #41"},
+        "totals": {"findings": 21, "severity": dict(severity_counts), "status": dict(status_counts)},
         "authors": AUTHORS,
     },
     "findings": findings,
@@ -318,7 +320,7 @@ pdf_links = {link.get("uri") for page in doc for link in page.get_links() if lin
 assert doc[0].rect == pymupdf.Rect(0, 0, 612, 842.25)
 assert doc[0].get_text().strip().splitlines() == ["Plazm", "Launch-Path Audit Report"]
 assert all(doc[i].rect == pymupdf.Rect(0, 0, 612, 792) for i in range(1, doc.page_count))
-assert "17 findings" in pdf_text and "15 findings are Fixed" in pdf_text and "2 are Partially Mitigated" in pdf_text
+assert "21 findings" in pdf_text and "19 findings are Fixed" in pdf_text and "2 are Partially Mitigated" in pdf_text
 assert "0x23r0" in pdf_text and "Favour Aniogor" in pdf_text
 assert AUDITED_SHA in pdf_text and REMEDIATION_SHA in pdf_text
 for uri in [a["url"] for a in AUTHORS] + ["https://33labs.ai", "https://x.com/33labs_"] + [f["issue_url"] for f in findings]:

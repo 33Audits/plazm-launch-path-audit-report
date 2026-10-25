@@ -1,6 +1,6 @@
 # Plazm Launch-Path Security Audit Report
 
-Standalone 33Labs security review of the Plazm launch path in [`BuildTheTech/BackedFund-Contracts`](https://github.com/BuildTheTech/BackedFund-Contracts), exported from source issues [#29–#45](https://github.com/BuildTheTech/BackedFund-Contracts/issues?q=is%3Aissue+number%3A29..45).
+Standalone 33Labs security review of the Plazm launch path in [`BuildTheTech/BackedFund-Contracts`](https://github.com/BuildTheTech/BackedFund-Contracts), refreshed from source issues [#29–#49](https://github.com/BuildTheTech/BackedFund-Contracts/issues?q=is%3Aissue+number%3A29..49) and their latest remediation comments.
 
 This publication is separate from the broader BackedFund report covering issues #1–#28.
 
@@ -20,15 +20,15 @@ This publication is separate from the broader BackedFund report covering issues 
 ## Scope and snapshots
 
 - Source repository: [`BuildTheTech/BackedFund-Contracts`](https://github.com/BuildTheTech/BackedFund-Contracts)
-- Finding baseline: [`213a6dba2e2641804ed56555d4f6f763dbe95200`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/213a6dba2e2641804ed56555d4f6f763dbe95200)
-- Remediation snapshot: [`a4dee324e9206e1ddb249ddb3329db9a0712cfc7`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)
-- Findings: 17 total — 2 Medium, 11 Low, 4 Informational
-- Remediation disposition: 15 Fixed, 2 Partially Mitigated
-- Final review date: October 22, 2026
+- Finding baseline: [`a4dee324e9206e1ddb249ddb3329db9a0712cfc7`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)
+- Remediation snapshot: [`2d210dbfe293a00122de726848c47e4472733bfb`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/2d210dbfe293a00122de726848c47e4472733bfb)
+- Findings: 21 total — 2 Medium, 15 Low, 4 Informational
+- Remediation disposition: 19 Fixed, 2 Partially Mitigated
+- Final review date: October 24, 2026
 
 ## Verification disclosure
 
-[Contracts CI run 39729240593](https://github.com/BuildTheTech/BackedFund-Contracts/actions/runs/39729240593) ran on the remediation snapshot. Dependency audit, compilation, release-consistency checks, contract-size checks, dead-code checks, type checking, and unit tests passed. Exact production coverage failed after a Node.js heap out-of-memory error; downstream deployment replay and Base fork/end-to-end jobs were skipped. The report preserves this limitation and does not claim clean full CI or verified deployment state.
+[Contracts CI run 40078929418](https://github.com/BuildTheTech/BackedFund-Contracts/actions/runs/40078929418) ran on the remediation snapshot. The contracts job failed at exact production coverage; Base Plazm fork and Base protocol end-to-end jobs were skipped. Round-five issue comments record targeted regressions passing, including Base-fork verification for the reinvestment sandwich case. The report does not claim clean full CI or verified deployment state.
 
 ## Reproducibility
 
@@ -49,11 +49,11 @@ python3 -m venv .venv
 .venv/bin/python build_report.py
 ```
 
-The generator reads `sources/issues.json`, uses the canonical files under `assets/`, and writes the release outputs under `reports/` plus the checksum manifest at the repository root.
+The generator reads `sources/issues-refresh.json`, uses the canonical files under `assets/`, and writes the release outputs under `reports/` plus the checksum manifest at the repository root.
 
 ## Release checksums
 
-- PDF: `0905ef013fec957af23c95ccc29e5cba2d849a4c9724bcf822135dc9cca8f846`
-- Markdown: `e2e402f6ffa57156a3fd6deafe2816180937a70f04620d4970b81bb854b34d38`
-- JSON: `cf5fe5fb634b7f045f8ad8399cea5ac2f62aa49209695ecee5e3f6106d73ff4a`
-- HTML: `63388ee4e53366573bee2573224848f22ba5bb74271446b2340708d26909d693`
+- PDF: `5a7c2b172b2d9e197c3f1532c10c50fa7704ba47a09d9195c53351959ec48fcf`
+- Markdown: `59ce34df6cf54de1fd9d1e277d2a7e35fe2aa97a59cadb11879dd6496666153e`
+- JSON: `37bb922f5017b02cea6c974d778a2b8e83e5e21846b0a1d234368dafabb76693`
+- HTML: `938a3203491fa8c82d57711f8ff7abbf43b1e322fa4f508ec108418ee9dd517a`

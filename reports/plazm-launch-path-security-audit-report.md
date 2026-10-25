@@ -2,9 +2,9 @@
 
 ## Introduction
 
-33Labs performed a focused review of the Plazm launch path implemented in [`BuildTheTech/BackedFund-Contracts`](https://github.com/BuildTheTech/BackedFund-Contracts). This report is a separate export of GitHub issues [#29](https://github.com/BuildTheTech/BackedFund-Contracts/issues/29) through [#45](https://github.com/BuildTheTech/BackedFund-Contracts/issues/45), covering launch settlement, recurring liquidity drips, route capacity, treasury reinvestment, V4 accounting bounds, guardian rotation, sale timing, and creator-supply accounting.
+33Labs performed a focused review of the Plazm launch path implemented in [`BuildTheTech/BackedFund-Contracts`](https://github.com/BuildTheTech/BackedFund-Contracts). This report is a separate export of GitHub issues [#29](https://github.com/BuildTheTech/BackedFund-Contracts/issues/29) through [#49](https://github.com/BuildTheTech/BackedFund-Contracts/issues/49), covering launch settlement, recurring liquidity drips, route capacity, treasury reinvestment, OTC capacity and rounding, V4 accounting bounds, guardian rotation, sale timing, and creator-supply accounting.
 
-The review identified **17 findings**: **2 Medium**, **11 Low**, and **4 Informational**. Against remediation snapshot [`a4dee324e9206e1ddb249ddb3329db9a0712cfc7`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7), **15 findings are Fixed** and **2 are Partially Mitigated** with documented residual conditions.
+The review identified **21 findings**: **2 Medium**, **15 Low**, and **4 Informational**. Against remediation snapshot [`2d210dbfe293a00122de726848c47e4472733bfb`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/2d210dbfe293a00122de726848c47e4472733bfb), **19 findings are Fixed** and **2 are Partially Mitigated** with documented residual conditions.
 
 ## Audit Team
 
@@ -29,21 +29,21 @@ The reviewed path coordinates permissionless launches whose raised assets are co
 
 - **Repository:** [`BuildTheTech/BackedFund-Contracts`](https://github.com/BuildTheTech/BackedFund-Contracts)
 - **Branch:** `main`
-- **Finding baseline:** [`213a6dba2e2641804ed56555d4f6f763dbe95200`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/213a6dba2e2641804ed56555d4f6f763dbe95200)
-- **Remediation snapshot:** [`a4dee324e9206e1ddb249ddb3329db9a0712cfc7`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)
-- **Source issues:** [#29–#45](https://github.com/BuildTheTech/BackedFund-Contracts/issues?q=is%3Aissue+number%3A29..45)
-- **Issue creation window:** October 19–20, 2026
-- **Final review date:** October 22, 2026
+- **Finding baseline:** [`a4dee324e9206e1ddb249ddb3329db9a0712cfc7`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)
+- **Remediation snapshot:** [`2d210dbfe293a00122de726848c47e4472733bfb`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/2d210dbfe293a00122de726848c47e4472733bfb)
+- **Source issues:** [#29–#49](https://github.com/BuildTheTech/BackedFund-Contracts/issues?q=is%3Aissue+number%3A29..49)
+- **Issue creation window:** October 19–22, 2026
+- **Final review date:** October 24, 2026
 
-The report is limited to the behavior documented by those 17 issues and their directly related launch-path code. It does not reopen or duplicate issues #1–#28 from the broader BackedFund report.
+The report is limited to the behavior documented by those 21 issues and their directly related launch-path code. It does not reopen or duplicate issues #1–#28 from the broader BackedFund report.
 
 ## Methodology
 
-The review combined issue-ledger reconstruction, manual source-path analysis, exploit and liveness reasoning, delta/accounting review, route-capacity analysis, lifecycle checks, and remediation reconciliation. Each disposition was checked against the latest reviewer evidence at `a4dee324` rather than inferred from GitHub issue state.
+The review combined issue-ledger reconstruction, manual source-path analysis, exploit and liveness reasoning, delta/accounting review, route-capacity analysis, lifecycle checks, and remediation reconciliation. Each disposition was checked against the latest reviewer evidence at `2d210dbf` rather than inferred from GitHub issue state.
 
 ## Verification Evidence and Limits
 
-[Contracts CI run 39729240593](https://github.com/BuildTheTech/BackedFund-Contracts/actions/runs/39729240593) executed on the exact remediation snapshot. Dependency audit, compilation, release-consistency checks, contract-size checks, dead-code checks, type checking, and the unit-test step passed. Exact production coverage later terminated with exit code 134 after a Node.js heap out-of-memory error; deployment replay, the Base Plazm fork job, and the Base protocol end-to-end job were skipped. Individual issue comments also record targeted unit and Base-fork regressions. This report distinguishes that recorded evidence from an independently rerun full suite and does not claim clean full CI or verified deployment state.
+[Contracts CI run 40078929418](https://github.com/BuildTheTech/BackedFund-Contracts/actions/runs/40078929418) executed on the exact remediation snapshot. The contracts job failed only at exact production coverage; the Base Plazm fork and Base protocol end-to-end jobs were skipped. Issue-level round-five comments record targeted regressions passing for the updated findings, including Base-fork verification for the reinvestment sandwich case. This report distinguishes those recorded targeted results from an independently rerun full suite and does not claim clean full CI or verified deployment state.
 
 ## Severity Classification
 
@@ -55,7 +55,7 @@ The review combined issue-ledger reconstruction, manual source-path analysis, ex
 
 | ID | Finding | Severity | Status | Source |
 |---|---|---|---|---|
-| M-01 | A dust DEX settlement chunk restarts the shared cooldown, so one atomic call after finalize can make a full-capacity Built launch miss its 24h settlement window | Medium | Partially Mitigated | [#30 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/30) |
+| M-01 | A dust DEX settlement chunk restarts the shared cooldown, so one atomic call after finalize can make a full-capacity Built launch miss its 24h settlement window | Medium | Fixed | [#30 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/30) |
 | M-02 | Drip completion permanently locks unused PLAZM and project tokens returned by addDripLiquidity | Medium | Fixed | [#32 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/32) |
 | L-01 | Reinvestment share above the V3 route capacity reverts claimAndRoute, freezing yield routing until a 7-day strategy change | Low | Fixed | [#29 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/29) |
 | L-02 | Liquidity drip stalls forever when one raw project-token unit costs more ETH than a single capacity-capped conversion | Low | Fixed | [#31 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/31) |
@@ -68,6 +68,10 @@ The review combined issue-ledger reconstruction, manual source-path analysis, ex
 | L-09 | A USDC-blocklisted yieldRecipient reverts every claimAndRoute, freezing all yield legs | Low | Fixed | [#40 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/40) |
 | L-10 | Permissionless reinvest swap can be sandwiched inside the 30 bps spot/TWAP band (~0.08% per event on Base) | Low | Fixed | [#41 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/41) |
 | L-11 | The 15% creator cap is measured before settlement burns; padded lpSupply leaves the creator with ~47-64% of supply | Low | Fixed | [#44 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/44) |
+| L-12 | Dust OTC asks at the head of the book hide real inventory from capacity checks and from execution | Low | Partially Mitigated | [#46 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/46) |
+| L-13 | OTC capacity counts asks at the floored TWAP quote that the matcher's ceil-rounded floor rejects | Low | Fixed | [#47 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/47) |
+| L-14 | Contribution limits can leave a hard-cap remainder no one can fill, failing softCap == hardCap launches | Low | Fixed | [#48 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/48) |
+| L-15 | With an admin chunk cap, partial OTC inventory makes settlement need one more DEX slot than scheduled | Low | Fixed | [#49 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/49) |
 | I-01 | Seed preflight checks liquidity but not V4 int128 currency amounts | Informational | Fixed | [#37 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/37) |
 | I-02 | Rotating the LaunchManager guardian leaves the old key able to pause existing vaults | Informational | Fixed | [#42 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/42) |
 | I-03 | A pause during a sale does not extend endTime, shortening the sale | Informational | Fixed | [#43 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/43) |
@@ -78,8 +82,8 @@ The review combined issue-ledger reconstruction, manual source-path analysis, ex
 **Severity:** Medium  
 **Source finding:** `M-10`  
 **Source issue:** [#30 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/30)  
-**Audited baseline:** [`213a6dba`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/213a6dba2e2641804ed56555d4f6f763dbe95200)  
-**Remediation snapshot:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)
+**Audited baseline:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)  
+**Remediation snapshot:** [`2d210dbf`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/2d210dbfe293a00122de726848c47e4472733bfb)
 
 ## Description
 
@@ -324,34 +328,40 @@ Also:
 
 ## Status
 
-**Partially Mitigated.** [Latest reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/30#issuecomment-6351450174)
+**Fixed.** [Latest reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/30#issuecomment-6385514853)
 
-**Reviewed at `a4dee32`: partially mitigated. Agree with @0x23r0; residual confirmed with a PoC.**
+**Reviewed at `2d210db`: fixed.**
 
-**What the fix closes**
-- A dust chunk no longer uses a slot: a DEX chunk restarts the cooldown only once `cooldownProgressETH >= ceil(fullChunk / 2)`.
-- `BuiltRouteCapacity.schedule` keeps one spare slot. With the default policy (no admin cap) the window is 24h = four 6h slots, capacity checks rely on three, and the largest opening leg is 3C. A 3.5C leg now reverts at `startSettlement`.
+- A slot now closes, and `lastExecution` restarts the cooldown, only once its DEX input reaches `slotETH = min(DEX work left + progress, min(dex, cap))` (`BuiltRouteCapacity.dexChunk`).
+- Each chunk's DEX share is clamped to the slot's remaining budget, so a caller who wins a slot opening does part of that slot's work and cannot spend the slot.
+- Both routers call the same `dexChunk`, and the diffs match.
 
-**What remains**
-- A half chunk still restarts the cooldown, so each slot an attacker wins does only C/2 of work.
-- Slot 0 costs nothing: `finalizeLaunch` is permissionless, so the attacker bundles it with a C/2 chunk in one transaction.
-- Work done in the four slots is `2C + k·C/2`, where k is the number of slots the keeper wins:
-  - opening leg in (2.5C, 3C]: the attacker needs 2 of the 3 remaining slot races;
-  - opening leg in (2C, 2.5C]: it needs all 3.
-- The attacker pays only gas and priority fees; the chunks spend launch ETH.
+**Edge cases checked**
+- **Many small chunks:** every slot still moves a full C before it closes.
+- **The remainder floor:** a request that would leave 1 wei pending is reduced so at least `MIN_REMAINDER_ETH` stays pending. A slot left 1 wei short closes with a 1e12 chunk.
+- **Capacity drop mid-slot:** the next chunk of any size closes the slot.
+- **Pause:** the window extends by the paused time and the slot's progress survives.
+- **OTC asks posted mid-slot to shrink `slotETH`:** this cannot close a slot early. A slot closes on a sub-limit target only when the DEX share covers all pending input beyond OTC, and the same chunk buys the OTC first, so the settlement completes.
 
-**PoC** (`PlazmLaunchRouter`; `BuildAssetLaunchRouter` has the identical change)
+**Our round-4 PoC, replayed** (`PlazmLaunchRouter`, C = 5,898.52 ETH, 2.95C opening leg)
 
 ```
-capacity C             : 5898.523386274421155105 ETH
-opening leg            : 17400.643989509542407559 ETH   (2.95C, accepted)
-executed in 4 slots    : 14746.308465686052887764 ETH   (attacker: 0h, 12h, 18h; keeper: 6h)
-stranded at deadline   : 2654.335523823489519795 ETH
-next keeper chunk      : reverted "PlazmRouter: settlement window elapsed"
-control (attacker wins only slot 0): settlement completes
+slot 0: attacker C/2 bundled with start   -> slot stays open (lastExecution = 0)
+        keeper chunk                       -> clamped to the other C/2; slot 0 moved exactly C
+attacker wins the +6h and +12h races      -> keeper still closes each slot in the same block
+slots used / slack                         : 3 / 12.0 h (spare slot unused)
+grind: 10 x C/20 attacker chunks per slot  : every slot still moves a full C; 3 slots
+remainder floor                            : slot 1 wei short -> closing chunk = 1e12 wei
+capacity cut ~10x mid-slot                 : slot closes; settlement still completes inside the spare
+pause 4h mid-slot                          : deadline +4h, keeper's chunk = C - C/2
+5 passing
 ```
 
-<details><summary>test/audit/M10Round4HalfSlotGrief.test.ts</summary>
+**Residuals** (agree with the team's notes)
+- **Slots follow live guard capacity.** If DEX liquidity is withdrawn mid-settlement, slots shrink. The spare slot and `extendSettlementWindow` are the backstops.
+- **Callers can get a smaller chunk than they asked for.** A caller's `minimumCounterOut` must be sized for the clamped chunk, or their transaction reverts.
+
+<details><summary>test/audit/M10Round5SlotBudget.test.ts</summary>
 
 ```ts
 import { expect } from "chai";
@@ -373,7 +383,7 @@ const TICK_SPACING = 200;
 const INTERVAL = 6 * 60 * 60;
 const LAUNCH_ID = 7;
 
-describe("[M-10] round 4: half-slot chunks still strand a full-capacity settlement", function () {
+describe("[M-10] round 5 (2d210db): per-slot DEX budget", function () {
   async function fixture(initialOverCapacity: [bigint, bigint]) {
     const [deployer, keeper, attacker, guardian] = await ethers.getSigners();
     const managerCaller = await (await ethers.getContractFactory("MockPlazmLaunchManagerCaller")).deploy();
@@ -416,7 +426,7 @@ describe("[M-10] round 4: half-slot chunks still strand a full-capacity settleme
     const [num, den] = initialOverCapacity;
     const targetInitial = (capacity * num) / den;
     const totalLiquidityETH = (targetInitial * 10_000n) / 8_500n; // default 15% drip
-    return { keeper, attacker, launchManager, router, capacity, totalLiquidityETH, routeHash: await guard.approvedRouteHash() };
+    return { keeper, attacker, guardian, firstPool, secondPool, launchManager, router, capacity, totalLiquidityETH, routeHash: await guard.approvedRouteHash() };
   }
   type F = Awaited<ReturnType<typeof fixture>>;
   afterEach(async () => { await network.provider.send("evm_setAutomine", [true]); });
@@ -444,96 +454,132 @@ describe("[M-10] round 4: half-slot chunks still strand a full-capacity settleme
     await network.provider.send("evm_mine");
     await network.provider.send("evm_setAutomine", [true]);
     expect((await ethers.provider.getTransactionReceipt(first.hash))!.status).to.equal(1);
-    if (second) expect((await ethers.provider.getTransactionReceipt(second.hash))!.status).to.equal(0);
+    if (second) expect((await ethers.provider.getTransactionReceipt(second.hash))!.status).to.equal(1);
   }
 
   async function nextSlot(f: F) {
     await time.increaseTo(Number((await f.router.getSettlement(LAUNCH_ID)).lastExecution) + INTERVAL);
   }
 
-  it("default schedule: a 3.5C opening leg (accepted pre-fix) is now rejected; 2.95C is accepted", async function () {
-    const big = await fixture([35n, 10n]);
-    await expect(start(big)).to.be.revertedWith("PlazmRouter: settlement exceeds staged capacity");
-    const ok = await fixture([295n, 100n]);
-    await start(ok);
-    const s = await ok.router.getSettlement(LAUNCH_ID);
-    expect(s.initialLiquidityETH).to.be.gt(ok.capacity * 2n + half(ok));
-    expect(s.initialLiquidityETH).to.be.lte(ok.capacity * 3n);
-    expect((await ok.router.settlementCancellationTime(LAUNCH_ID)) - BigInt(s.startedAt)).to.equal(24n * 3600n);
-  });
 
-  it("attacker wins slot 0 (atomic) plus 2 of 3 races: 2.95C settlement misses the window", async function () {
-    const f = await fixture([295n, 100n]);
+  const pending = async (f: F) => (await f.router.getSettlement(LAUNCH_ID)).pendingLiquidityETH as bigint;
+  // cooldownProgressETH is not exposed; a slot is closed iff lastExecution == latest block time.
+  const closedNow = async (f: F) => BigInt((await f.router.getSettlement(LAUNCH_ID)).lastExecution) === BigInt(await time.latest());
+  const call = async (f: F, who: any, max: bigint) =>
+    f.router.connect(who).executeSettlementChunk(LAUNCH_ID, max, (await time.latest()) + 3600);
 
-    // Slot 0: settlement start and a half chunk land in the same block.
+  async function startWithAttackerHalf(f: F) {
     await network.provider.send("evm_setAutomine", [false]);
     await start(f);
     const t0 = await f.router.connect(f.attacker).executeSettlementChunk(
-      LAUNCH_ID, half(f), (await time.latest()) + 3600, { gasLimit: 2_000_000 },
-    );
+      LAUNCH_ID, half(f), (await time.latest()) + 3600, { gasLimit: 2_000_000 });
     await network.provider.send("evm_mine");
     await network.provider.send("evm_setAutomine", [true]);
     expect((await t0.wait())!.status).to.equal(1);
+  }
+
+  it("round-4 PoC replay: attacker takes slot 0 atomically plus 2 of 3 races, 2.95C launch still completes", async function () {
+    const f = await fixture([295n, 100n]);
+    await startWithAttackerHalf(f);
     const s0 = await f.router.getSettlement(LAUNCH_ID);
-    expect(s0.lastExecution).to.equal(s0.startedAt); // half chunk restarted the cooldown
+    expect(s0.lastExecution).to.equal(0n);            // slot 0 still open
+    await call(f, f.keeper, 0n);                       // keeper clamped to the other half, closes slot 0
+    expect(await closedNow(f)).to.equal(true);
+    expect(s0.initialLiquidityETH - (await pending(f))).to.equal(f.capacity);
+    const after0 = s0.initialLiquidityETH - (await pending(f));
     const deadline = await f.router.settlementCancellationTime(LAUNCH_ID);
-
-    await nextSlot(f); await raceSlot(f, false); // 6h: keeper wins, full C
-    await nextSlot(f); await raceSlot(f, true);  // 12h: attacker C/2, keeper blocked
-    await nextSlot(f); await raceSlot(f, true);  // 18h: attacker C/2, keeper blocked
-
+    let slots = 1;
+    const races = [true, true, false];
+    for (const attackerWins of races) {
+      if ((await pending(f)) === 0n) break;
+      await nextSlot(f); await raceSlot(f, attackerWins); slots++;
+    }
     const s1 = await f.router.getSettlement(LAUNCH_ID);
-    const executed = s1.initialLiquidityETH - s1.pendingLiquidityETH;
-    expect(executed).to.equal(f.capacity + 3n * half(f));
-    expect(s1.pendingLiquidityETH).to.be.gt(0n);
-
-    const fifth = BigInt(s1.lastExecution) + BigInt(INTERVAL);
-    expect(fifth).to.be.gte(deadline);
-    await time.increaseTo(Number(fifth));
-    await expect(f.router.connect(f.keeper).executeSettlementChunk(LAUNCH_ID, 0, (await time.latest()) + 600))
-      .to.be.revertedWith("PlazmRouter: settlement window elapsed");
-
-    console.log("      capacity C             :", ethers.formatEther(f.capacity), "ETH");
-    console.log("      opening leg            :", ethers.formatEther(s1.initialLiquidityETH), "ETH");
-    console.log("      executed in 4 slots    :", ethers.formatEther(executed), "ETH");
-    console.log("      stranded at deadline   :", ethers.formatEther(s1.pendingLiquidityETH), "ETH");
+    expect(s1.pendingLiquidityETH).to.equal(0n);
+    expect(BigInt(s1.lastExecution)).to.be.lt(deadline);
+    console.log("      slot 0 executed        :", ethers.formatEther(after0), "ETH (C =", ethers.formatEther(f.capacity), ")");
+    console.log("      slots used / spare     :", slots, "/", Number(deadline - BigInt(s1.lastExecution)) / 3600, "h slack");
   });
 
-  it("control: attacker wins only slot 0, keeper wins the rest, settlement completes", async function () {
+  it("attacker grinds each slot with 10 tiny chunks first; every slot still moves a full C", async function () {
     const f = await fixture([295n, 100n]);
-    await network.provider.send("evm_setAutomine", [false]);
     await start(f);
-    await f.router.connect(f.attacker).executeSettlementChunk(LAUNCH_ID, half(f), (await time.latest()) + 3600, { gasLimit: 2_000_000 });
-    await network.provider.send("evm_mine");
-    await network.provider.send("evm_setAutomine", [true]);
-    for (let i = 0; i < 3; i++) { await nextSlot(f); await raceSlot(f, false); }
-    expect((await f.router.getSettlement(LAUNCH_ID)).pendingLiquidityETH).to.equal(0n);
+    const tiny = f.capacity / 20n;
+    const deadline = await f.router.settlementCancellationTime(LAUNCH_ID);
+    let slots = 0;
+    while ((await pending(f)) > 0n) {
+      if (slots > 0) await nextSlot(f);
+      const before = await pending(f);
+      for (let i = 0; i < 10 && (await pending(f)) > 0n; i++) await call(f, f.attacker, tiny);
+      if ((await pending(f)) > 0n) await call(f, f.keeper, 0n);
+      const moved = before - (await pending(f));
+      if ((await pending(f)) > 0n) expect(moved).to.equal(f.capacity);
+      slots++;
+    }
+    expect(slots).to.equal(3);
+    expect(BigInt((await f.router.getSettlement(LAUNCH_ID)).lastExecution)).to.be.lt(deadline);
+  });
+
+  it("remainder floor: a request leaving 1 wei is reduced, and a slot left 1 wei short closes with a 1e12 chunk", async function () {
+    const f = await fixture([295n, 100n]);
+    await start(f);
+    await call(f, f.attacker, f.capacity - 1n);           // slot needs 1 more wei
+    expect((await f.router.getSettlement(LAUNCH_ID)).lastExecution).to.equal(0n);
+    const p0 = await pending(f);
+    await call(f, f.keeper, 0n);
+    expect(p0 - (await pending(f))).to.equal(10n ** 12n); // budget floor, not 1 wei
+    expect(await closedNow(f)).to.equal(true);
+    // A request that would leave 1 wei pending leaves the floor instead.
+    await nextSlot(f);
+    const p1 = await pending(f);
+    await call(f, f.attacker, p1 - 1n);
+    const left = await pending(f);
+    expect(left === 0n || left >= 10n ** 12n).to.equal(true);
+  });
+
+  it("capacity drop mid-slot closes the slot early; restored capacity still completes inside the spare", async function () {
+    const f = await fixture([295n, 100n]);
+    await start(f);
+    await call(f, f.attacker, half(f));
+    await f.firstPool.setState(ethers.parseEther("100000"), 200, 200);   // ~10x less capacity
+    await f.secondPool.setState(ethers.parseEther("100000"), -200, -200);
+    const before = await pending(f);
+    await call(f, f.keeper, 0n);
+    console.log("      closing chunk after drop:", ethers.formatEther(before - (await pending(f))), "ETH");
+    expect(await closedNow(f)).to.equal(true);
+    await f.firstPool.setState(ethers.parseEther("1000000"), 200, 200);
+    await f.secondPool.setState(ethers.parseEther("1000000"), -200, -200);
+    const deadline = await f.router.settlementCancellationTime(LAUNCH_ID);
+    while ((await pending(f)) > 0n) {
+      await nextSlot(f);
+      if ((await time.latest()) >= Number(deadline)) break;
+      await call(f, f.keeper, 0n);
+    }
+    console.log("      pending at end          :", ethers.formatEther(await pending(f)), "ETH");
+  });
+
+  it("pause mid-slot keeps progress and extends the window by the paused time", async function () {
+    const f = await fixture([295n, 100n]);
+    await start(f);
+    await call(f, f.attacker, half(f));
+    const d0 = await f.router.settlementCancellationTime(LAUNCH_ID);
+    await f.router.connect(f.guardian).pause();
+    await time.increase(4 * 3600);
+    // protocolAuthority is the deployer in this fixture
+    const [deployer] = await ethers.getSigners();
+    await f.router.connect(deployer).unpause();
+    const d1 = await f.router.settlementCancellationTime(LAUNCH_ID);
+    expect(d1 - d0).to.be.gte(4n * 3600n);
+    expect((await f.router.getSettlement(LAUNCH_ID)).lastExecution).to.equal(0n);
+    const b = await pending(f);
+    await call(f, f.keeper, 0n);
+    expect(b - (await pending(f))).to.equal(f.capacity - half(f)); // progress survived the pause
+    expect(await closedNow(f)).to.equal(true);
   });
 });
 ```
 
 </details>
-
-**Severity of the residual:** Low to Medium. The impact is unchanged (the launch can only be canceled and refunded), but the attacker must win slot races on Base's sequencer, and ProtocolAuthority can still call `extendSettlementWindow` before the deadline.
-
-**Suggested fix:** make the per-slot budget exact, so a slot is consumed only after a full chunk of work, whoever spends it:
-
-```solidity
-uint256 progress = settlement.cooldownProgressETH;
-// Remaining work in the current slot. If capacity fell below the progress
-// already made, the next chunk (any size) completes the slot.
-uint256 slotBudget = fullChunkETH > progress ? fullChunkETH - progress : fullChunkETH;
-ethIn = Math.min(ethIn, slotBudget);
-// ... execute ...
-progress += ethIn;
-if (progress >= fullChunkETH || settlement.pendingLiquidityETH == 0) {
-    settlement.lastExecution = uint64(block.timestamp);
-    progress = 0;
-}
-settlement.cooldownProgressETH = progress;
-```
-
-Callers can still split a slot into smaller chunks, but a slot only closes after a full chunk of DEX input, so a griefer who wins a race does honest work instead of removing it. Same change in `BuildAssetLaunchRouter`.
 
 
 # [M-02] Drip completion permanently locks unused PLAZM and project tokens returned by addDripLiquidity
@@ -541,8 +587,8 @@ Callers can still split a slot into smaller chunks, but a slot only closes after
 **Severity:** Medium  
 **Source finding:** `M-11`  
 **Source issue:** [#32 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/32)  
-**Audited baseline:** [`213a6dba`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/213a6dba2e2641804ed56555d4f6f763dbe95200)  
-**Remediation snapshot:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)
+**Audited baseline:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)  
+**Remediation snapshot:** [`2d210dbf`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/2d210dbfe293a00122de726848c47e4472733bfb)
 
 ## Description
 
@@ -849,8 +895,8 @@ function deployResidual(uint256 launchId)
 **Severity:** Low  
 **Source finding:** `L-17`  
 **Source issue:** [#29 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/29)  
-**Audited baseline:** [`213a6dba`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/213a6dba2e2641804ed56555d4f6f763dbe95200)  
-**Remediation snapshot:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)
+**Audited baseline:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)  
+**Remediation snapshot:** [`2d210dbf`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/2d210dbfe293a00122de726848c47e4472733bfb)
 
 ## Description
 
@@ -941,8 +987,8 @@ Note (informational): with the 20% cap from #41, redirection starts at about one
 **Severity:** Low  
 **Source finding:** `L-18`  
 **Source issue:** [#31 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/31)  
-**Audited baseline:** [`213a6dba`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/213a6dba2e2641804ed56555d4f6f763dbe95200)  
-**Remediation snapshot:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)
+**Audited baseline:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)  
+**Remediation snapshot:** [`2d210dbf`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/2d210dbfe293a00122de726848c47e4472733bfb)
 
 ## Description
 
@@ -1150,8 +1196,8 @@ Note (informational): `executeProgram` reads live `maxSafeEthInput`, so if pool 
 **Severity:** Low  
 **Source finding:** `L-19`  
 **Source issue:** [#33 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/33)  
-**Audited baseline:** [`213a6dba`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/213a6dba2e2641804ed56555d4f6f763dbe95200)  
-**Remediation snapshot:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)
+**Audited baseline:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)  
+**Remediation snapshot:** [`2d210dbf`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/2d210dbfe293a00122de726848c47e4472733bfb)
 
 ## Description
 
@@ -1430,8 +1476,8 @@ Note (informational, documented): a permanent-lock program whose route dies for 
 **Severity:** Low  
 **Source finding:** `L-20`  
 **Source issue:** [#34 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/34)  
-**Audited baseline:** [`213a6dba`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/213a6dba2e2641804ed56555d4f6f763dbe95200)  
-**Remediation snapshot:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)
+**Audited baseline:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)  
+**Remediation snapshot:** [`2d210dbf`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/2d210dbfe293a00122de726848c47e4472733bfb)
 
 ## Description
 
@@ -1631,8 +1677,8 @@ require(Math.ceilDiv(programETH, TOTAL_INTERVALS) <= dex || programETH <= staged
 **Severity:** Low  
 **Source finding:** `L-21`  
 **Source issue:** [#35 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/35)  
-**Audited baseline:** [`213a6dba`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/213a6dba2e2641804ed56555d4f6f763dbe95200)  
-**Remediation snapshot:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)
+**Audited baseline:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)  
+**Remediation snapshot:** [`2d210dbf`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/2d210dbfe293a00122de726848c47e4472733bfb)
 
 ## Description
 
@@ -1834,8 +1880,8 @@ Note (informational): the drip's real counter amount comes from conversions at m
 **Severity:** Low  
 **Source finding:** `L-22`  
 **Source issue:** [#36 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/36)  
-**Audited baseline:** [`213a6dba`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/213a6dba2e2641804ed56555d4f6f763dbe95200)  
-**Remediation snapshot:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)
+**Audited baseline:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)  
+**Remediation snapshot:** [`2d210dbf`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/2d210dbfe293a00122de726848c47e4472733bfb)
 
 ## Description
 
@@ -2034,8 +2080,8 @@ Suggestion (informational): enforce it at registration in `BuildAssetRegistry.co
 **Severity:** Low  
 **Source finding:** `L-23`  
 **Source issue:** [#38 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/38)  
-**Audited baseline:** [`213a6dba`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/213a6dba2e2641804ed56555d4f6f763dbe95200)  
-**Remediation snapshot:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)
+**Audited baseline:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)  
+**Remediation snapshot:** [`2d210dbf`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/2d210dbfe293a00122de726848c47e4472733bfb)
 
 ## Description
 
@@ -2189,8 +2235,8 @@ uint256 used1 = delta1 < 0 ? uint256(int256(-delta1)) : 0;
 **Severity:** Low  
 **Source finding:** `L-24`  
 **Source issue:** [#39 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/39)  
-**Audited baseline:** [`213a6dba`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/213a6dba2e2641804ed56555d4f6f763dbe95200)  
-**Remediation snapshot:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)
+**Audited baseline:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)  
+**Remediation snapshot:** [`2d210dbf`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/2d210dbfe293a00122de726848c47e4472733bfb)
 
 ## Description
 
@@ -2354,8 +2400,8 @@ A 0%-reinvest strategy never calls the adapter, and a 1-unit reinvest share gets
 **Severity:** Low  
 **Source finding:** `L-25`  
 **Source issue:** [#40 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/40)  
-**Audited baseline:** [`213a6dba`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/213a6dba2e2641804ed56555d4f6f763dbe95200)  
-**Remediation snapshot:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)
+**Audited baseline:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)  
+**Remediation snapshot:** [`2d210dbf`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/2d210dbfe293a00122de726848c47e4472733bfb)
 
 ## Description
 
@@ -2526,8 +2572,8 @@ The only leftover case is a recipient contract that is blocklisted and also can'
 **Severity:** Low  
 **Source finding:** `L-26`  
 **Source issue:** [#41 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/41)  
-**Audited baseline:** [`213a6dba`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/213a6dba2e2641804ed56555d4f6f763dbe95200)  
-**Remediation snapshot:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)
+**Audited baseline:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)  
+**Remediation snapshot:** [`2d210dbf`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/2d210dbfe293a00122de726848c47e4472733bfb)
 
 ## Description
 
@@ -2757,8 +2803,8 @@ Note (informational): a front-run shrinks `maxReinvestUsdc` slightly (~4 USDC pe
 **Severity:** Low  
 **Source finding:** `L-27`  
 **Source issue:** [#44 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/44)  
-**Audited baseline:** [`213a6dba`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/213a6dba2e2641804ed56555d4f6f763dbe95200)  
-**Remediation snapshot:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)
+**Audited baseline:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)  
+**Remediation snapshot:** [`2d210dbf`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/2d210dbfe293a00122de726848c47e4472733bfb)
 
 ## Description
 
@@ -2907,13 +2953,913 @@ require(config.creatorSupply <= Math.mulDiv(minCirculating, MAX_CREATOR_ALLOC_BP
 Note (informational): drip-residue burns after settlement (`settlePermanentResidual`) shrink supply slightly, so the creator's share can drift marginally above 15% later.
 
 
+# [L-12] Dust OTC asks at the head of the book hide real inventory from capacity checks and from execution
+
+**Severity:** Low  
+**Source finding:** `L-28`  
+**Source issue:** [#46 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/46)  
+**Audited baseline:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)  
+**Remediation snapshot:** [`2d210dbf`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/2d210dbfe293a00122de726848c47e4472733bfb)
+
+## Description
+
+| | |
+|---|---|
+| **Severity** | Low (Impact: Medium, Likelihood: Low) |
+| **Confidence** | High (Hardhat PoC on the real `TokenOTC` + `OTCBuildAssetAdapter` passes) |
+| **Location** | `OTCBuildAssetAdapter.sol:_otcCapacity` (:105-127, page read :107); `TokenOTC.sol:getOrderIds` (:234), `quoteBudget` / `_buyBudget` (:165, :214), `MAX_MATCHES = 32` (:15) |
+| **Class** | Other: OTC capacity accounting (V0) |
+| **Sources** | Lead shared by @0x23r0 ("Tiny OTC orders can hide usable inventory from drip capacity checks"), verified against commit `a4dee32` |
+| **Related** | #34 (OTC inventory counted as recurring capacity), #47 (L-29, OTC capacity counts an ask the matcher rejects) |
+| **PoC** | `test/audit/L28OTCDustHidesInventory.test.ts` (passes) |
+
+**What's wrong**
+
+The OTC adapter only ever looks at the first 32 orders of the price-sorted book, both when it reports capacity and when it buys. Anyone can post 32 dust asks priced slightly better than the real inventory. Those asks take the whole page, so capacity checks stop counting the real inventory and conversions can't reach it, until someone clears the dust.
+
+**How (mechanism)**
+
+`_otcCapacity` reads `otc.getOrderIds(outputToken, weth, 0, otc.MAX_MATCHES())` (`OTCBuildAssetAdapter.sol:107`) and sums only those orders. `TokenOTC` keeps the book sorted by fee-inclusive price, cheapest first, and `createOrder` is permissionless with no minimum size. An ask of 4 units for 1 wei is cheaper per unit than a real ask, so 32 of them become the first page. The real order moves to position 33 and drops out of `maxSafeInput`, `stagedCapacity` and `canFillOTC`. Execution has the same limit: `quoteBudget` and `_buyBudget` stop after `MAX_MATCHES` iterations (`TokenOTC.sol:165`, `:214`). A conversion larger than DEX capacity fills the 32 dust asks, sends the rest to the DEX leg, fails **`residual <= dexCapacity`** (`OTCBuildAssetAdapter.sol:219`) and reverts, which also rolls back the dust fills. The dust therefore stays at the head of the book.
+
+## Impact
+
+- **OTC-dependent Built launches:** every capacity check that reads `maxSafeInput` or `stagedCapacity` undercounts:
+  - creation preflight (`LaunchEconomicsPolicy` → router `_validateLaunchCapacity`);
+  - `startSettlement`, run inside `finalizeLaunch`;
+  - drip initialization (`_validateProgramCapacity`).
+  A launch that needs OTC inventory to fit can't be created, or can't finalize, while the dust sits at the head of the book. Once the router's startup grace runs out, the launch can only be canceled and refunded.
+- **Settlement / drip execution:** conversions that need the real inventory revert while the dust is present.
+- **Scope note:**
+  - The dust is priced below market, so anyone can clear it by buying it directly on `TokenOTC` (the PoC uses one `buyBudget` call for 32 wei), and that is slightly profitable. A keeper can bundle the clear with `finalizeLaunch`.
+  - The attacker's cost is the dust plus gas, but it has to repost after every clear.
+  - No funds are lost.
+- **Severity:** Impact Medium (availability of OTC-dependent finalization and conversion) × Likelihood Low (needs a persistent griefer and is cleared cheaply) gives **Low**.
+
+## Proof of Concept
+
+The fixture is the one the team's `OTCBuildAssetAdapter.test.ts` uses: real `TokenOTC` and `OTCBuildAssetAdapter`, with a fixed-ratio mock DEX (TWAP 2 units per wei, 0.1 ETH DEX capacity).
+- **Real inventory:** 1 ETH of asks at 3 units per wei. Capacity reads 1.1 ETH and `canFillOTC(1 ETH)` is true.
+- **Attack:** 32 asks of 4 units for 1 wei each.
+  - Capacity drops to 0.1 ETH plus 32 wei, `stagedCapacity(…, 3)` drops by 1 ETH, and `canFillOTC(1 ETH)` is false.
+  - A 0.5 ETH conversion reverts with "OTCAdapter: residual capacity", and the real order stays unsold.
+- **Clear:** one `buyBudget` of 32 wei directly on the OTC brings capacity back to 1.1 ETH.
+
+```
+  [L-28] PoC: dust asks hide OTC inventory from capacity and execution
+      capacity before / with dust : 1.100000001 / 0.100000000000000032 ETH
+      attacker escrow             : 32 orders x 4 units, 1 wei each
+    ✔ Lead A: 32 dust asks hide a 1 ETH order from capacity and from execution (599ms)
+```
+
+<details><summary>test/audit/L28OTCDustHidesInventory.test.ts</summary>
+
+```ts
+import { expect } from "chai";
+import { ethers } from "hardhat";
+import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
+
+// [L-28] OTC capacity lead against a4dee32, on the real TokenOTC +
+// OTCBuildAssetAdapter (fixed-ratio mock DEX, as in the team's adapter tests).
+//
+// Lead A: `_otcCapacity` reads only the first MAX_MATCHES (32) orders of the
+// price-sorted book. 32 dust asks priced better than real inventory occupy the
+// whole page, so maxSafeInput / stagedCapacity stop counting the real order.
+// Execution sees the same 32-order page, and a full-size conversion reverts on
+// the DEX residual check, which rolls back the dust fills too.
+
+
+const eth = ethers.parseEther;
+
+describe("[L-28] PoC: dust asks hide OTC inventory from capacity and execution", function () {
+  async function fixture() {
+    const [authority, maker, attacker, caller, recipient] = await ethers.getSigners();
+    const weth: any = await (await ethers.getContractFactory("MockWETH")).deploy();
+    const asset: any = await (await ethers.getContractFactory("MockOTCToken")).deploy(18);
+    const otc: any = await (await ethers.getContractFactory("TokenOTC")).deploy(authority.address, authority.address, 0);
+    const dex: any = await (await ethers.getContractFactory("MockBuildAssetRouteAdapter")).deploy(
+      await weth.getAddress(), await asset.getAddress(), ethers.id("audit OTC DEX"));
+    const adapter: any = await (await ethers.getContractFactory("OTCBuildAssetAdapter")).deploy(
+      await otc.getAddress(), await weth.getAddress(), await asset.getAddress(), await dex.getAddress(),
+      await dex.getAddress(), false, 300);
+    await dex.setAuthorizedCaller(await adapter.getAddress(), true);
+    for (const s of [maker, attacker]) {
+      await asset.mint(s.address, eth("1000"));
+      await asset.connect(s).approve(await otc.getAddress(), ethers.MaxUint256);
+    }
+    return { maker, attacker, caller, recipient, weth, asset, otc, dex, adapter };
+  }
+  type F = Awaited<ReturnType<typeof fixture>>;
+  const ask = async (f: F, who: any, sell: bigint, buy: bigint, previous = 0n) =>
+    f.otc.connect(who).createOrder(await f.asset.getAddress(), await f.weth.getAddress(), sell, buy,
+      (await time.latest()) + 30 * 86400, previous);
+  const convert = async (f: F, amount: bigint) =>
+    f.adapter.connect(f.caller).convertNative(f.recipient.address, await f.adapter.approvedRouteHash(), 1n,
+      (await time.latest()) + 60, { value: amount });
+
+  it("Lead A: 32 dust asks hide a 1 ETH order from capacity and from execution", async function () {
+    const f = await loadFixture(fixture);
+    const dexCap = eth("0.1");
+    await f.dex.configure(dexCap, 2, 1); // TWAP: 2 asset units per wei
+    await ask(f, f.maker, eth("3"), eth("1")); // real inventory: 1 ETH at 3 per wei (beats TWAP)
+
+    const premium: bigint = await f.adapter.MAX_ROUNDING_DUST();
+    const before: bigint = await f.adapter.maxSafeInput(300, 1800);
+    expect(before).to.equal(dexCap + eth("1") + premium);
+    expect(await f.adapter.stagedCapacity(300, 1800, 3)).to.equal(dexCap * 3n + eth("1") + premium);
+    expect(await f.adapter.canFillOTC(eth("1"))).to.equal(true);
+
+    // Attacker: 32 asks of 4 units for 1 wei each (cheaper per unit than the
+    // real ask, so each goes to the head of the book). Total escrow: 128 units.
+    for (let i = 0; i < 32; i++) await ask(f, f.attacker, 4n, 1n);
+
+    const after: bigint = await f.adapter.maxSafeInput(300, 1800);
+    const staged: bigint = await f.adapter.stagedCapacity(300, 1800, 3);
+    expect(after).to.equal(dexCap + 32n); // the 1 ETH order is no longer counted
+    expect(staged).to.equal(dexCap * 3n + 32n);
+    expect(await f.adapter.canFillOTC(eth("1"))).to.equal(false);
+
+    // Execution sees the same page: a 0.5 ETH conversion fills 32 wei of dust,
+    // sends the rest to the 0.1 ETH DEX leg and reverts, rolling the dust back.
+    await expect(convert(f, eth("0.5"))).to.be.revertedWith("OTCAdapter: residual capacity");
+    expect((await f.otc.orders(2)).sold).to.equal(0n);
+
+    // Anyone can clear the dust directly on the OTC (it is under-priced), which
+    // restores the real inventory. The attacker's cost is the dust plus gas.
+    const [, , , clearer] = await ethers.getSigners();
+    await f.weth.connect(clearer).deposit({ value: 32n });
+    await f.weth.connect(clearer).approve(await f.otc.getAddress(), 32n);
+    await f.otc.connect(clearer).buyBudget(await f.asset.getAddress(), await f.weth.getAddress(), 32n, 2n, 1n,
+      clearer.address);
+    expect(await f.adapter.maxSafeInput(300, 1800)).to.equal(before);
+
+    console.log("      capacity before / with dust :", ethers.formatEther(before), "/", ethers.formatEther(after), "ETH");
+    console.log("      attacker escrow             : 32 orders x 4 units, 1 wei each");
+  });
+
+});
+```
+
+</details>
+
+## Recommendation
+
+1. **Skip dust when reading and matching the book.** Let the adapter page past orders whose remaining cost is below a minimum (or whose quote is zero) without spending one of the 32 slots, so they can't push real inventory off the page.
+2. **Set a minimum order size in `TokenOTC.createOrder`**, for example a minimum `buyAmount` per pair, so filling the head of the book costs real capital.
+
+```solidity
+// TokenOTC.createOrder
+require(buyAmount >= minimumOrderCost[buyToken], "OTC: order too small");
+```
+
+3. **At minimum**, document that keepers should clear under-priced dust (`buyBudget`) atomically before `finalizeLaunch` and before conversions that depend on OTC inventory.
+
+## Status
+
+**Partially Mitigated.** [Latest reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/46#issuecomment-6385515153)
+
+**Reviewed at `2d210db`: fixed. One residual remains, and it is cheaper than the note says.**
+
+**What the fix closes**
+- `createOrder` rejects `buyAmount < minimumBuyAmount[buyToken]`. The constructor sets the WETH minimum (0.01 ETH), and deployment validation checks that it is nonzero.
+  - Our PoC's 1-wei asks revert with "OTC: order too small".
+  - The 1 ETH order stays counted: `maxSafeInput` = 1.1 ETH before and after.
+  - A 0.5 ETH conversion fills it.
+- 32 minimum-size asks ahead of the real order count as 0.32 ETH of capacity, and a conversion buys them first. That is real inventory, not a hiding primitive.
+- `_fill` closes an order once its unpaid amount is zero or below the minimum, and moves the unsold escrow to the maker's claim. We tested both cases:
+  - a maker self-filling down to 1 wei unpaid;
+  - a 0.995 ETH budget ending inside a 1 ETH order.
+  - In both, `balanceOf(otc) == escrowed + totalClaims` holds for the asset and for WETH.
+- Expired orders no longer take one of the `MAX_MATCHES` slots.
+
+**Residual: expired orders can still exhaust `MAX_SCAN`, at gas cost only**
+
+The attack:
+1. The attacker posts 128 minimum-size asks priced just ahead of the real order, with `expiresAt = now + 2`.
+2. Two seconds later all OTC inventory is hidden from views and from execution. `maxSafeInput` drops from 1.1 ETH to the 0.1 ETH DEX leg, and a 0.5 ETH conversion reverts with "residual capacity".
+
+What it costs:
+- About 33.8M gas to create the asks.
+- The 1.28 ETH of escrow is exposed for 2 seconds and comes back in full on cancel.
+- The minimum adds no lasting cost: the asks are never fillable in practice, and the escrow is returned.
+
+Recovery:
+- Anyone can cancel the expired asks. Clearing all 128 costs about 10.4M gas.
+- The attacker can repost, so each round costs the attacker about 3x the clearer's gas.
+- Cancelling one order restores capacity, because 127 expired orders leave the one visit that reaches the real order.
+
+Impact matches the original finding (Low): OTC routing is denied until a keeper cancels, and the DEX leg keeps working.
+
+**Recommendation (optional):**
+- Have `buyBudget` and `buyBudgetWithRounding` unlink and refund the expired orders they visit, so the first execution clears them. Cancellation is already permissionless.
+- Or enforce a minimum order lifetime (for example `expiresAt >= block.timestamp + 1 hours`), so every ask that reaches the head is fillable inventory for a meaningful window.
+
+PoC: `test/audit/L28Round5OTCMinimumOrder.test.ts` (4 tests). The residual probe is "128 minimum-size asks that expire one second later…".
+
+
+# [L-13] OTC capacity counts asks at the floored TWAP quote that the matcher's ceil-rounded floor rejects
+
+**Severity:** Low  
+**Source finding:** `L-29`  
+**Source issue:** [#47 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/47)  
+**Audited baseline:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)  
+**Remediation snapshot:** [`2d210dbf`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/2d210dbfe293a00122de726848c47e4472733bfb)
+
+## Description
+
+| | |
+|---|---|
+| **Severity** | Low (Impact: Medium, Likelihood: Low) |
+| **Confidence** | High (Hardhat PoC on the real `TokenOTC` + `OTCBuildAssetAdapter` passes) |
+| **Location** | `OTCBuildAssetAdapter.sol:_otcCapacity` (eligibility :117), `_convert` (:203, residual check :219); `TokenOTC.sol:quoteBudget` / `_buyBudget` price floor (:173, :224) |
+| **Class** | Other: OTC capacity accounting (V0) |
+| **Sources** | Lead shared by @0x23r0 ("OTC capacity counts offers the matcher cannot execute", proposed Medium), verified against commit `a4dee32` |
+| **Related** | #34, #46 (L-28, dust asks hide OTC inventory) |
+| **PoC** | `test/audit/L29OTCCapacityPredicate.test.ts` (passes) |
+
+**What's wrong**
+
+The adapter decides which OTC asks count toward capacity with one price test, and buys with a slightly stricter one. An ask priced exactly at the TWAP quote passes the first test and fails the second. Capacity counts it in full, but a conversion sized to that capacity can't buy it, so the DEX leg is left with more than it can take and the conversion reverts.
+
+**How (mechanism)**
+
+`_otcCapacity` counts an order when **`remaining >= quote(cost)`** (`OTCBuildAssetAdapter.sol:117`), where `quote` is the guard's floored TWAP output for that order's cost alone. Execution passes `rateNumerator = quote(amount)` and `rateDenominator = amount` for the whole conversion budget (`:203`), and the matcher accepts an order only if **`sell >= ceil(cost × quote(amount) / amount)`** (`TokenOTC.sol:173`, `:224`). The guard quotes are linear apart from floor rounding, so the matcher's floor can be one or two output units above `quote(cost)`. An ask selling exactly `quote(cost)` is counted in `maxSafeInput` and `stagedCapacity` but skipped by the matcher for most budgets. `_convert` then sends the whole remainder to the DEX leg and fails **`residual <= dexCapacity`** (`:219`).
+
+## Impact
+
+- **Capacity-sized conversions revert:**
+  - **Router:** a keeper's default settlement chunk (`maximumChunkETH = 0` sizes it to `maxSafeEthInput`) reverts while such an ask is on the book.
+  - **Drip:** `executeProgram` has no size parameter and spends `min(unlocked, maxSafeEthInput)`. Once unlocked ETH exceeds DEX capacity, every call reverts while the ask stays at the TWAP-boundary price, and the backlog keeps growing.
+- **Capacity checks overstate OTC:** creation preflight, `startSettlement` and the drip's one-off OTC allowance all count the ask, so a schedule can rely on inventory the matcher won't take.
+- **Scope note:**
+  - The gap is one or two output units. The ask only stays in it while the TWAP mean tick is unchanged; when the tick moves, the ask either becomes cheap enough to be matched (the maker sells below market) or stops being counted.
+  - On the router, a keeper can work around it by choosing a smaller chunk.
+  - Anyone can remove the ask by filling it directly with `fillOrder` at roughly the TWAP price.
+  - An honest maker who prices exactly at the quoted TWAP triggers the same state by accident.
+  - No funds are lost.
+- **Severity:** Impact Medium (availability of capacity-sized conversions, including a drip with a backlog) × Likelihood Low (a boundary-priced ask held at a stable tick, with workarounds) gives **Low**. @0x23r0 proposed Medium. That would need the drip-backlog stall shown end to end under realistic tick movement.
+
+## Proof of Concept
+
+The fixture is the team's adapter fixture with a mock DEX quoting 1.5 units per wei, floored, and 1 ETH of DEX capacity.
+- **The ask:** `cost = 1e18 + 1` wei for exactly `quote(cost) = 1500000000000000001` units.
+- **Capacity:** `maxSafeInput` counts the full `cost` (2.000000000000000001 ETH in total).
+- **Execution:** the matcher's floor for a capacity-sized budget is `1500000000000000002`, so conversions of the full capacity and of 1.5 ETH both revert with "OTCAdapter: residual capacity", and the ask is never filled.
+- **Only exception:** a budget of exactly `cost` matches it (`canFillOTC(cost)` is true), because there both roundings agree.
+
+```
+  [L-29] PoC: OTC capacity counts an ask the matcher rejects
+      counted OTC capacity        : 1.000000000000000001 ETH
+      ask output / matcher floor  : 1500000000000000001 / 1500000000000000002
+    ✔ Lead B: an ask priced at the floored TWAP quote is counted but not matched
+```
+
+<details><summary>test/audit/L29OTCCapacityPredicate.test.ts</summary>
+
+```ts
+import { expect } from "chai";
+import { ethers } from "hardhat";
+import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
+
+// [L-29] OTC capacity lead against a4dee32, on the real TokenOTC +
+// OTCBuildAssetAdapter (fixed-ratio mock DEX, as in the team's adapter tests).
+//
+// Lead B: capacity accepts an order when `remaining >= quote(cost)` (floored),
+// but the matcher requires `sell >= ceil(cost * quote(amount) / amount)`.
+// An ask priced exactly at the floored quote is counted but skipped for most
+// budgets, so a capacity-sized conversion reverts on the DEX residual check.
+
+const eth = ethers.parseEther;
+
+describe("[L-29] PoC: OTC capacity counts an ask the matcher rejects", function () {
+  async function fixture() {
+    const [authority, maker, attacker, caller, recipient] = await ethers.getSigners();
+    const weth: any = await (await ethers.getContractFactory("MockWETH")).deploy();
+    const asset: any = await (await ethers.getContractFactory("MockOTCToken")).deploy(18);
+    const otc: any = await (await ethers.getContractFactory("TokenOTC")).deploy(authority.address, authority.address, 0);
+    const dex: any = await (await ethers.getContractFactory("MockBuildAssetRouteAdapter")).deploy(
+      await weth.getAddress(), await asset.getAddress(), ethers.id("audit OTC DEX"));
+    const adapter: any = await (await ethers.getContractFactory("OTCBuildAssetAdapter")).deploy(
+      await otc.getAddress(), await weth.getAddress(), await asset.getAddress(), await dex.getAddress(),
+      await dex.getAddress(), false, 300);
+    await dex.setAuthorizedCaller(await adapter.getAddress(), true);
+    for (const s of [maker, attacker]) {
+      await asset.mint(s.address, eth("1000"));
+      await asset.connect(s).approve(await otc.getAddress(), ethers.MaxUint256);
+    }
+    return { maker, attacker, caller, recipient, weth, asset, otc, dex, adapter };
+  }
+  type F = Awaited<ReturnType<typeof fixture>>;
+  const ask = async (f: F, who: any, sell: bigint, buy: bigint, previous = 0n) =>
+    f.otc.connect(who).createOrder(await f.asset.getAddress(), await f.weth.getAddress(), sell, buy,
+      (await time.latest()) + 30 * 86400, previous);
+  const convert = async (f: F, amount: bigint) =>
+    f.adapter.connect(f.caller).convertNative(f.recipient.address, await f.adapter.approvedRouteHash(), 1n,
+      (await time.latest()) + 60, { value: amount });
+
+  it("Lead B: an ask priced at the floored TWAP quote is counted but not matched", async function () {
+    const f = await loadFixture(fixture);
+    const dexCap = eth("1");
+    await f.dex.configure(dexCap, 3, 2); // TWAP: 1.5 asset units per wei, floored
+    const cost = eth("1") + 1n; // odd, so 1.5 * cost has a fractional part
+    const sell = (cost * 3n) / 2n; // exactly quote(cost)
+    expect(await f.adapter.quote(cost, 1800)).to.equal(sell);
+    await ask(f, f.maker, sell, cost);
+
+    const capacity: bigint = await f.adapter.maxSafeInput(300, 1800);
+    expect(capacity).to.equal(dexCap + cost); // counted in full
+    expect(await f.adapter.stagedCapacity(300, 1800, 3)).to.equal(dexCap * 3n + cost);
+
+    // The matcher's floor for a capacity-sized budget is one unit above `sell`.
+    const ref: bigint = await f.adapter.quote(capacity, 1800);
+    const floor = (cost * ref + capacity - 1n) / capacity;
+    expect(floor).to.be.gt(sell);
+    await expect(convert(f, capacity)).to.be.revertedWith("OTCAdapter: residual capacity");
+    // Any budget above the DEX leg that needs this order reverts the same way.
+    await expect(convert(f, eth("1.5"))).to.be.revertedWith("OTCAdapter: residual capacity");
+    expect((await f.otc.orders(1)).sold).to.equal(0n);
+
+    // Only a budget of exactly `cost` (where both roundings agree) matches it.
+    expect(await f.adapter.canFillOTC(cost)).to.equal(true);
+
+    console.log("      counted OTC capacity        :", ethers.formatEther(cost), "ETH");
+    console.log("      ask output / matcher floor  :", sell.toString(), "/", floor.toString());
+  });
+});
+```
+
+</details>
+
+## Recommendation
+
+1. **Use one eligibility predicate for capacity and matching.** Count an ask in `_otcCapacity` only if it passes the matcher's own floor at a high-precision reference rate, and pass that same rate to `quoteBudget` / `buyBudgetWithRounding` in `_convert`.
+
+```solidity
+// Shared reference rate: quote a large fixed amount so floor rounding is negligible.
+uint256 refIn = 1e36;
+uint256 refOut = quote(refIn, window);
+// _otcCapacity
+if (remaining >= Math.mulDiv(cost, refOut, refIn, Math.Rounding.Ceil)) { /* count */ }
+// _convert
+otc.quoteBudget(outputToken, weth, amount, refOut, refIn);
+```
+
+2. **Alternatively, compute OTC capacity by simulating the matcher** (`otc.quoteBudget` with the execution rate) instead of re-deriving eligibility per order.
+3. **Size router and drip conversions from confirmed OTC.** Have the router and drip size full chunks from `dexCapacity` plus the OTC input `quoteBudget` actually confirms at the execution rate, not from `maxSafeInput`.
+
+## Status
+
+**Fixed.** [Latest reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/47#issuecomment-6385515469)
+
+**Reviewed at `2d210db`: fixed.**
+
+- Capacity, `canFillOTC` and `_convert` all price at `quote(1e36) / 1e36` through `TokenOTC.quoteBudget` and `buyBudgetWithRounding`.
+  - Both share one walk and one whole-order predicate, `_meetsFloor`: `remaining >= ceil(remainingCost * rate)`, compared exactly over 512-bit products.
+  - The predicate does not depend on the budget, so an order that is counted is also matched at every budget size.
+- **Our PoC:** the ask at `floor(1.5 * cost)` is no longer counted (`maxSafeInput` = DEX leg only), and a capacity-sized conversion succeeds without touching it.
+- **The same ask one unit higher:** counted in full. Conversions of 2 ETH + 1 wei, 1.5, 1.99 and 1.0000001 ETH all succeed.
+- **Extra probe:** 1% fee, four asks with awkward sizes just above the floor, and a 7.8 gwei DEX leg. Ten conversion sizes from 0.1% to 100% of `maxSafeInput` all succeed, and escrow stays exact.
+- **Rounding premium:** it now applies only when the DEX leg is under 1 gwei. With a zero DEX leg and a budget ending inside an ask priced exactly at the floor, five sizes up to `maxSafeInput` all succeed. So the premium no longer pushes the capacity edge into "residual capacity".
+- `quote(1e36)` is a TWAP quote computed with 512-bit `mulDiv` in both guards. It does not overflow for realistic ticks, and if it reverts, OTC routing switches off while the DEX leg keeps working.
+
+**Note (no change needed):** a partial fill pays the order's cumulative rounding, so it can cost a few wei above the floor. The whole-budget `_coversBudget` check still requires the aggregate output to be at least `ceil(amount * rate)`.
+
+PoC: `test/audit/L29Round5OTCCapacityPredicate.test.ts` (4 tests).
+
+
+# [L-14] Contribution limits can leave a hard-cap remainder no one can fill, failing softCap == hardCap launches
+
+**Severity:** Low  
+**Source finding:** `L-30`  
+**Source issue:** [#48 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/48)  
+**Audited baseline:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)  
+**Remediation snapshot:** [`2d210dbf`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/2d210dbfe293a00122de726848c47e4472733bfb)
+
+## Description
+
+| | |
+|---|---|
+| **Severity** | Low (Impact: Medium, Likelihood: Low) |
+| **Confidence** | High (Hardhat PoC through the real `LaunchManager` lifecycle passes) |
+| **Location** | `LaunchManager.sol:contribute` (:429-458; cap check :436, per-wallet bounds :438-441, sell-out settlement :455) |
+| **Class** | Other: sale state machine (V0) |
+| **Sources** | Lead shared by @0x23r0; also a lead in `.solidity-auditor/runs/20261016-133716` (`unfillable-remainder-blocks-sellout`). Verified against commit `a4dee32` |
+| **PoC** | `test/audit/L30ContributionRemainder.test.ts` (passes) |
+
+**What's wrong**
+
+Every buyer's running total has to stay between the sale's minimum and maximum contribution, and the raise can't go above the hard cap. When the amount left before the cap is smaller than the minimum, a new buyer can't fill it. If every existing buyer is also at their maximum, nobody can. The sale can then never sell out. When the soft cap equals the hard cap, it fails at sale end and every buyer is refunded.
+
+**How (mechanism)**
+
+`contribute` reverts with `HardCapExceeded` when `raised + msg.value > hardCap` (`:436`), and with `ContributionOutOfBounds` when the buyer's new total is outside **`[minContribution, maxContribution]`** (`:438-441`). Neither check makes an exception for the contribution that exactly closes the cap. With remainder `r = hardCap - raised < minContribution`:
+- a new buyer sending `r` is below the minimum;
+- a new buyer sending at least the minimum overshoots the cap;
+- an existing buyer can top up only if `previous + r <= maxContribution`.
+
+If the only wallets with room are controlled by the person who left the gap, the cap is unreachable. The atomic sell-out settlement (`:455`) never runs. `finalizeLaunch` before `endTime` reverts with `SaleNotEnded`, and after `endTime` `_settleLaunch` sees `raised < softCap` and marks the launch failed when `softCap == hardCap`.
+
+## Impact
+
+- **`softCap == hardCap` launches:** a buyer can leave a gap below the minimum and walk away. Once every other wallet is maxed (a popular, oversubscribed sale), nobody can close it, and at sale end the launch fails and refunds. The griefer gets their ETH back too, so the attack costs them nothing but the lockup. The same state can also arise naturally.
+- **`softCap < hardCap` launches:** the early sell-out (and, for Built launches, settlement starting at sell-out) waits for the full sale window instead. `finalizeLaunch` succeeds after `endTime`.
+- **Scope note:**
+  - Policy allows `softCap == hardCap` (`hardCap >= softCap`), and the team's own fixtures use it.
+  - Buyer funds aren't lost: refunds are available, and the gap-leaving wallet can still close the gap itself.
+- **Severity:** Impact Medium (a fully subscribed sale can be made to fail) × Likelihood Low (needs every other wallet at its maximum) gives **Low**.
+
+## Proof of Concept
+
+The PoC uses the composed local protocol (`fullProtocolFixture`): a Standard launch with hard cap 2 ETH, min 0.3 ETH and max 1 ETH.
+- **Setup:** `buyer` contributes 1 ETH (at its maximum) and `buyer2` contributes 0.8 ETH, leaving 0.2 ETH.
+- **No one else can close the gap:**
+  - a new buyer sending 0.2 ETH reverts with `ContributionOutOfBounds`;
+  - `buyer` sending 0.2 ETH reverts with `ContributionOutOfBounds`;
+  - a new buyer sending 0.3 ETH reverts with `HardCapExceeded`.
+- **`softCap == hardCap`:** after `endTime`, `finalizeLaunch` marks the launch **Failed**, and both buyers claim refunds.
+- **`softCap = 1 ETH`:** the same gap blocks only the early sell-out (`SaleNotEnded`), and the launch finalizes after `endTime`.
+
+```
+  [L-30] PoC: unfillable hard-cap remainder
+    ✔ softCap == hardCap: a 0.8 ETH contribution leaves 0.2 ETH no one else can fill, and the launch fails (373ms)
+    ✔ softCap < hardCap: the same gap only blocks the early sell-out; finalize after end still succeeds
+```
+
+<details><summary>test/audit/L30ContributionRemainder.test.ts</summary>
+
+```ts
+import { expect } from "chai";
+import { ethers } from "hardhat";
+import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
+import { fullProtocolFixture, launchConfig, launchTerms } from "../../scripts/lib/local-protocol";
+
+// [L-30] `contribute` requires every buyer's running total to stay in
+// [minContribution, maxContribution] and the raise to stay <= hardCap. When
+// hardCap - raised < minContribution and every wallet that could top up is at
+// its maximum, no transaction can reach the cap. With softCap == hardCap the
+// launch then fails at sale end and every buyer is refunded.
+
+describe("[L-30] PoC: unfillable hard-cap remainder", function () {
+  async function setup(softCap: bigint) {
+    const f: any = await loadFixture(fullProtocolFixture);
+    const config = await launchConfig(0, "Remainder", "REM", {
+      softCap, hardCap: ethers.parseEther("2"),
+      minContribution: ethers.parseEther("0.3"), maxContribution: ethers.parseEther("1"),
+    });
+    await f.manager.connect(f.creator).createLaunchWithTerms(config, launchTerms());
+    await time.increaseTo(config.startTime);
+    return { f, config };
+  }
+
+  it("softCap == hardCap: a 0.8 ETH contribution leaves 0.2 ETH no one else can fill, and the launch fails", async function () {
+    const { f, config } = await setup(ethers.parseEther("2"));
+    const [, , , , , , , , , , , , outsider] = await ethers.getSigners();
+
+    await f.manager.connect(f.buyer).contribute(0, { value: ethers.parseEther("1") });   // honest, at max
+    await f.manager.connect(f.buyer2).contribute(0, { value: ethers.parseEther("0.8") }); // leaves 0.2 < min
+
+    // A new buyer cannot send 0.2 (below min); the maxed buyer cannot top up.
+    await expect(f.manager.connect(outsider).contribute(0, { value: ethers.parseEther("0.2") }))
+      .to.be.revertedWithCustomError(f.manager, "ContributionOutOfBounds");
+    await expect(f.manager.connect(f.buyer).contribute(0, { value: ethers.parseEther("0.2") }))
+      .to.be.revertedWithCustomError(f.manager, "ContributionOutOfBounds");
+    // Anything that respects the minimum overshoots the cap.
+    await expect(f.manager.connect(outsider).contribute(0, { value: ethers.parseEther("0.3") }))
+      .to.be.revertedWithCustomError(f.manager, "HardCapExceeded");
+
+    // Only buyer2 (the wallet that left the gap) can close it. If it doesn't,
+    // the sale runs out and settles below softCap.
+    await time.increaseTo(Number(config.endTime) + 1);
+    await f.manager.finalizeLaunch(0);
+    expect((await f.manager.getLaunch(0)).status).to.equal(2n); // Failed
+    await expect(f.manager.connect(f.buyer).claimRefund(0)).to.changeEtherBalance(f.buyer, ethers.parseEther("1"));
+    await expect(f.manager.connect(f.buyer2).claimRefund(0)).to.changeEtherBalance(f.buyer2, ethers.parseEther("0.8"));
+  });
+
+  it("softCap < hardCap: the same gap only blocks the early sell-out; finalize after end still succeeds", async function () {
+    const { f, config } = await setup(ethers.parseEther("1"));
+    const [, , , , , , , , , , , , outsider] = await ethers.getSigners();
+    await f.manager.connect(f.buyer).contribute(0, { value: ethers.parseEther("1") });
+    await f.manager.connect(f.buyer2).contribute(0, { value: ethers.parseEther("0.8") });
+    await expect(f.manager.connect(outsider).contribute(0, { value: ethers.parseEther("0.2") }))
+      .to.be.revertedWithCustomError(f.manager, "ContributionOutOfBounds");
+    await expect(f.manager.finalizeLaunch(0)).to.be.revertedWithCustomError(f.manager, "SaleNotEnded");
+    await time.increaseTo(Number(config.endTime) + 1);
+    await f.manager.finalizeLaunch(0);
+    expect((await f.manager.getLaunch(0)).status).to.equal(1n); // Finalized
+  });
+});
+```
+
+</details>
+
+## Recommendation
+
+1. **Let the contribution that exactly fills the cap go below the minimum.**
+
+```solidity
+uint256 buyerTotal = previous + msg.value;
+bool fillsCap = newTotal == launch.hardCap;
+if ((buyerTotal < launch.minContribution && !fillsCap) || buyerTotal > launch.maxContribution) {
+    revert ContributionOutOfBounds();
+}
+```
+
+2. **Alternatively, accept an over-cap contribution as a partial fill** and refund the excess above `hardCap`, so a buyer sending at least the minimum can always close the sale.
+3. **Check the `ZeroTokenPurchase` edge too:** a closing remainder too small to buy one token unit still can't be filled under fix 1, so either let `finalizeLaunch` treat `hardCap - raised` below the one-unit price as sold out, or round the last allocation up.
+
+## Status
+
+**Fixed.** [Latest reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/48#issuecomment-6385515907)
+
+**Reviewed at `2d210db`: fixed.**
+
+- In `contribute`, the contribution that makes `newTotal == hardCap` skips the wallet minimum and the `ZeroTokenPurchase` floor.
+- `HardCapExceeded` and the wallet maximum still apply to every contribution, including the closing one.
+- Every other contribution keeps both checks.
+
+**Our PoC re-run** (`test/audit/L30Round5ContributionRemainder.test.ts`), with a 2 ETH cap, min 0.3 and max 1, after 1 + 0.8 ETH:
+- The maxed wallet still cannot add 0.2: `ContributionOutOfBounds`.
+- An outsider still cannot send a non-closing 0.1: `ContributionOutOfBounds`.
+- An outsider's 0.2 closes the cap. The launch settles before `endTime` (status 1), where at `a4dee32` it Failed.
+- With `softCap < hardCap`, the same closer completes the early sell-out.
+
+**Note:** any remainder above the wallet maximum can still be worked down by in-bounds contributions until it fits a single closer. No unfillable state remains.
+
+We accept the zero-unit closer trade-off: the loss is under one unit's price, paid by the closer, and the leftover unit burns.
+
+
+# [L-15] With an admin chunk cap, partial OTC inventory makes settlement need one more DEX slot than scheduled
+
+**Severity:** Low  
+**Source finding:** `L-31`  
+**Source issue:** [#49 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/49)  
+**Audited baseline:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)  
+**Remediation snapshot:** [`2d210dbf`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/2d210dbfe293a00122de726848c47e4472733bfb)
+
+## Description
+
+| | |
+|---|---|
+| **Severity** | Low (Impact: Medium, Likelihood: Low) |
+| **Confidence** | High (Hardhat PoC on the composed production graph, `PlazmLaunchRouter` + `OTCBuildAssetAdapter`, passes) |
+| **Location** | `BuiltRouteCapacity.sol:schedule` (purchase count :60); `PlazmLaunchRouter.sol:_executeSettlementChunk` (chunk sizing :357-366); same logic in `BuildAssetLaunchRouter` |
+| **Class** | Other: settlement scheduling (V0) |
+| **Sources** | Lead shared by @0x23r0, verified against commit `a4dee32` |
+| **Related** | #30 (M-10, settlement cooldown and spare slot) |
+| **PoC** | `test/audit/L31PartialOTCSlots.test.ts` (passes) |
+
+**What's wrong**
+
+With an admin chunk cap set, the settlement planner assumes OTC inventory replaces whole DEX purchases. When settlement runs, each chunk mixes OTC and DEX up to the same cap, and a mixed chunk uses a DEX slot. With partial OTC inventory, a default keeper call needs one more DEX slot than the plan allowed. That uses up the spare slot round 4 added, and with a long interval almost no slack is left for a late keeper.
+
+**How (mechanism)**
+
+When `_maximumDexChunkETH > 0`, `schedule` plans **`purchases = ceil((amount - otc) / min(dex, cap))`** (`BuiltRouteCapacity.sol:60`), i.e. OTC inventory is subtracted before counting DEX purchases. `_executeSettlementChunk` caps each chunk at `fullChunkETH = min(pending, dex + otc, cap)` (`PlazmLaunchRouter.sol:363-364`), and the adapter fills OTC first and the rest from the DEX. A chunk that isn't fully OTC-covered is a DEX chunk and restarts the cooldown. So with OTC inventory `O` below `cap`, default calls need **`ceil(amount / cap) - floor(O / cap)`** DEX slots, which can be one more than `purchases`. Since round 4, the window holds `purchases + 1` slot openings. Its slack after the last needed slot is about `24h - interval` when `12h <= interval < 24h`.
+
+## Impact
+
+- **Built launches under an admin chunk cap with a long interval:** partial OTC inventory removes the spare slot. Any keeper delay larger than the remaining slack (1h at a 23h interval) strands the settlement, and the launch can only be canceled and refunded.
+- **Attackers can force it:** settlement chunks are permissionless, so anyone can make the first call a mixed full-cap chunk even if the keeper would have split off an OTC-only chunk.
+- **Scope note:**
+  - The default policy (no admin cap) isn't affected: `schedule` skips this calculation, and the first chunk absorbs all OTC.
+  - It requires ProtocolAuthority to configure a chunk cap and a long interval.
+  - A careful keeper avoids the extra slot by first executing an OTC-only chunk of exactly the OTC inventory, which doesn't start the cooldown.
+  - The spare slot was meant to absorb one lost or late slot (#30); this uses it up before any griefing.
+- **Severity:** Impact Medium (a launch can miss its settlement window) × Likelihood Low (an admin configuration plus partial OTC inventory plus a late keeper) gives **Low**.
+
+## Proof of Concept
+
+The PoC uses the composed protocol with OTC routing (`fullProtocolFixture(false, true)`) in Built-on-Plazm mode.
+- **Setup:**
+  - ProtocolAuthority sets a 0.1 ETH chunk cap and a 23h interval.
+  - 0.05 ETH of OTC inventory is posted, and a 1 ETH sell-out starts settlement of a 0.304 ETH opening leg.
+- **The mismatch:** the schedule plans **3** DEX purchases (window 24h + 2 × 23h = 70h, four slot openings). Default keeper calls use **4**, and the last one lands with **1h** of slack.
+- **Late keeper:** one keeper call 2h late leaves **0.004 ETH** pending when the window closes, and the next chunk reverts with "settlement window elapsed".
+- **Control:** with an OTC-only first chunk (`maximumChunkETH = 0.05 ETH`) and the same 2h delay, settlement completes with **22h** of slack.
+
+```
+  [L-31] PoC: partial OTC inventory undercounts DEX settlement slots
+      opening leg / OTC / cap : 0.304 / 0.05 / 0.1 ETH
+      planned vs used slots   : 3 vs 4
+      slack at completion     : 0.9988888888888889 h
+    ✔ schedule plans 3 DEX purchases; default chunks need 4, leaving 1h of slack (651ms)
+      stranded with one 2h delay: 0.004 ETH pending
+    ✔ a keeper 2h late once now strands the settlement; splitting off the OTC chunk would not (254ms)
+      slack at completion     : 21.99888888888889 h
+    ✔ control: OTC-only first chunk, same 2h delay, completes with the spare slot unused (945ms)
+```
+
+<details><summary>test/audit/L31PartialOTCSlots.test.ts</summary>
+
+```ts
+import { expect } from "chai";
+import { ethers } from "hardhat";
+import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
+import { fullProtocolFixture, launchConfig, launchTerms } from "../../scripts/lib/local-protocol";
+
+// [L-31] with an admin chunk cap, `BuiltRouteCapacity.schedule` plans
+// ceil((amount - OTC) / cap) DEX purchases, i.e. it assumes OTC inventory
+// removes whole DEX chunks. Execution caps the combined OTC + DEX chunk at the
+// same `cap`, and a mixed chunk is a DEX chunk that arms the cooldown. With a
+// partial OTC book, the default keeper call needs one more DEX slot than the
+// schedule planned, consuming the spare slot round 4 added. With a long
+// interval the remaining slack is (24h - interval).
+
+const WETH = "0x4200000000000000000000000000000000000006";
+const HOUR = 3600;
+const INTERVAL = 23 * HOUR;
+const CAP = ethers.parseEther("0.1");
+
+describe("[L-31] PoC: partial OTC inventory undercounts DEX settlement slots", function () {
+  async function propose(f: any, target: string, data: string) {
+    await f.protocolAuthority.connect(f.deployer).propose(target, 0, data, 0, ethers.ZeroHash);
+    const id = await f.protocolAuthority.proposalCount();
+    await f.protocolAuthority.connect(f.protocolAuthoritySigner2).confirm(id);
+    await f.protocolAuthority.execute(id, data);
+  }
+
+  async function setup() {
+    const f: any = await fullProtocolFixture(false, true);
+    const router = f.plazmLaunchRouter;
+    const plazm = await f.plazm.getAddress();
+    await propose(f, await router.getAddress(),
+      router.interface.encodeFunctionData("setDexSettlementPolicy", [plazm, CAP, INTERVAL]));
+
+    // 0.05 ETH of OTC inventory (half a chunk), posted before settlement starts.
+    const otcETH = ethers.parseEther("0.05");
+    const offered = otcETH * 3n;
+    await f.plazm.mint(f.creator2.address, offered);
+    await f.plazm.connect(f.creator2).approve(await f.tokenOTC.getAddress(), offered);
+    await f.tokenOTC.connect(f.creator2).createOrder(plazm, WETH, offered, otcETH, (await time.latest()) + 40 * 86400, 0);
+
+    const raised = ethers.parseEther("1");
+    const config = await launchConfig(2, "Slots", "SLOT", {
+      lpCounterAsset: plazm, yieldRecipient: f.creator.address,
+      softCap: raised, hardCap: raised, maxContribution: raised,
+    });
+    await f.manager.connect(f.creator).createLaunchWithTerms(config, launchTerms({
+      liquidityDripBps: 2000, maxSwapSlippageBps: 150, executionCooldown: 21600,
+      routeHash: await router.approvedRouteHash(),
+    }));
+    await time.increaseTo(config.startTime);
+    await f.manager.connect(f.buyer).contribute(0, { value: raised }); // starts settlement
+    const s = await router.getSettlement(0);
+    const deadline: bigint = await router.settlementCancellationTime(0);
+    const dex: bigint = await f.plazmOTCInitialAdapter.dexCapacity(300, 1800);
+    return { f, router, s, deadline, dex, otcETH };
+  }
+
+  const chunk = async (f: any, max = 0n) =>
+    f.manager.connect(f.keeper).executeBuiltSettlementChunk(0, max, (await time.latest()) + 600);
+  const waitSlot = async (router: any, late = 0) =>
+    time.increaseTo(Number((await router.getSettlement(0)).lastExecution) + INTERVAL + late);
+
+  it("schedule plans 3 DEX purchases; default chunks need 4, leaving 1h of slack", async function () {
+    const { f, router, s, deadline, dex, otcETH } = await setup();
+    expect(dex).to.be.gte(CAP);
+    const initial: bigint = s.initialLiquidityETH;
+    const planned = (initial - otcETH + CAP - 1n) / CAP;          // ceil((amount - OTC) / cap)
+    const needed = (initial + CAP - 1n) / CAP;                     // ceil(amount / cap), OTC < cap
+    expect(planned).to.equal(3n);
+    expect(needed).to.equal(4n);
+    // Window = 24h + (planned - 1) * 23h = 70h: four slot openings (0, 23h, 46h, 69h).
+    expect(deadline - s.startedAt).to.equal(BigInt(24 * HOUR + 2 * INTERVAL));
+
+    let dexChunks = 0;
+    await chunk(f); dexChunks++; // mixed: 0.05 OTC + 0.05 DEX, arms the cooldown
+    while ((await router.getSettlement(0)).pendingLiquidityETH > 0n) {
+      await waitSlot(router); await chunk(f); dexChunks++;
+    }
+    const done = await router.getSettlement(0);
+    expect(dexChunks).to.equal(4);
+    expect(deadline - BigInt(done.lastExecution)).to.be.lte(BigInt(HOUR)); // 1h of slack left
+    console.log("      opening leg / OTC / cap :", ethers.formatEther(initial), "/", ethers.formatEther(otcETH), "/", ethers.formatEther(CAP), "ETH");
+    console.log("      planned vs used slots   :", planned.toString(), "vs", dexChunks);
+    console.log("      slack at completion     :", Number(deadline - BigInt(done.lastExecution)) / HOUR, "h");
+  });
+
+  it("a keeper 2h late once now strands the settlement; splitting off the OTC chunk would not", async function () {
+    const { f, router, s, deadline, otcETH } = await setup();
+    await chunk(f);                         // default keeper call: mixed chunk
+    await waitSlot(router, 2 * HOUR); await chunk(f);
+    await waitSlot(router); await chunk(f);
+    const left = await router.getSettlement(0);
+    expect(left.pendingLiquidityETH).to.be.gt(0n);
+    await waitSlot(router);
+    expect(BigInt(await time.latest())).to.be.gte(deadline);
+    await expect(chunk(f)).to.be.revertedWith("PlazmRouter: settlement window elapsed");
+    console.log("      stranded with one 2h delay:", ethers.formatEther(left.pendingLiquidityETH), "ETH pending");
+  });
+
+  it("control: OTC-only first chunk, same 2h delay, completes with the spare slot unused", async function () {
+    const { f, router, deadline, otcETH } = await setup();
+    await chunk(f, otcETH);                 // OTC-only: does not arm the cooldown
+    expect((await router.getSettlement(0)).lastExecution).to.equal(0n);
+    await chunk(f);                         // DEX 0.1 at t0
+    await waitSlot(router, 2 * HOUR); await chunk(f);
+    await waitSlot(router); await chunk(f);
+    const done = await router.getSettlement(0);
+    expect(done.pendingLiquidityETH).to.equal(0n);
+    expect(BigInt(done.lastExecution)).to.be.lt(deadline);
+    console.log("      slack at completion     :", Number(deadline - BigInt(done.lastExecution)) / HOUR, "h");
+  });
+});
+```
+
+</details>
+
+## Recommendation
+
+1. **Make execution match the plan:** when a chunk would mix OTC and DEX and OTC can't cover the whole chunk, execute only the OTC-covered part first, without starting the cooldown, then let DEX chunks use full slots.
+
+```solidity
+// _executeSettlementChunk, before the cooldown check (sketch)
+if (!otcOnly) {
+    uint256 dex = _dexCapacity(); // IStagedBuiltRouteGuard(priceGuard).dexCapacity(...)
+    uint256 total = priceGuard.maxSafeEthInput(MAX_INITIAL_PRICE_IMPACT_BPS, TWAP_WINDOW);
+    uint256 otcPart = Math.min(ethIn, total > dex ? total - dex : 0);
+    if (otcPart > 0 && BuiltRouteCapacity.canFillOTC(address(executor), otcPart)) {
+        ethIn = otcPart; // OTC-only chunk: no DEX slot consumed
+        otcOnly = true;
+    }
+}
+```
+
+2. **Or make the plan match execution:** count DEX purchases as `ceil(amount / slice) - floor(otc / slice)` in `schedule`, so OTC only replaces whole chunks.
+3. Apply the same change in `BuildAssetLaunchRouter`.
+
+## Status
+
+**Fixed.** [Latest reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/49#issuecomment-6385516285)
+
+**Reviewed at `2d210db`: fixed.**
+
+- When a chunk needs the DEX, `dexChunk` first takes `otcETH = capacity - dexCapacity`, which current OTC inventory fills outside the admin cap and outside the slot.
+- Only `ethIn - otcETH` counts toward `cooldownProgressETH`. This is the same assumption `schedule` makes, so execution now uses the slots that were planned.
+
+**Our round-4 PoC, replayed** (cap 0.1 ETH, 23h interval, 0.05 ETH of OTC, 0.304 ETH opening leg)
+
+```
+first (mixed) chunk     : 0.15 ETH   (OTC 0.05 + cap 0.1)
+planned vs used slots   : 3 vs 3      (was 3 vs 4)
+slack at completion     : 24.0 h      (was 1 h)
+keeper 2h late once     : completes, 22.0 h slack (was stranded)
+```
+
+**Residual (stated by the team):** the OTC share of a mixed chunk is uncapped. In our run, one chunk moved 0.25 ETH with a 0.1 ETH cap (0.15 OTC + 0.1 DEX). OTC fills don't move the pool, so this is fine.
+
+**Related issue, not caused by this fix: `schedule` counts OTC inventory the maker can still withdraw**
+- `schedule` counts OTC inventory once, at creation preflight and at settlement start, but the orders are not committed. Any maker can call `cancelOrder` straight after start.
+- The spare slot absorbs up to one cap of withdrawn inventory. Anything more strands the settlement.
+
+```
+opening leg / OTC / cap : 0.304 / 0.2 / 0.1 ETH
+planned DEX slots       : 2   (window holds 3 slot openings)
+maker cancels its 0.2 ETH ask right after start
+DEX chunks executed     : 3, pending at deadline 0.004 ETH
+next chunk              : reverted "PlazmRouter: settlement window elapsed"
+```
+
+- An attacker can create this on purpose: post asks at or above the TWAP floor before the sell-out, so start accepts a larger OTC-backed leg, then cancel them. The cost is a refundable escrow plus gas.
+- ProtocolAuthority can recover with `extendSettlementWindow` before the deadline. We rate it **Low** (Impact: Medium, launch fails; Likelihood: Low, needs an OTC-backed leg above DEX-only capacity plus a missed governance extension).
+- Options:
+  1. Plan the window from DEX capacity alone and let OTC only shorten execution.
+  2. Cap the OTC credit in `schedule` at one spare slot's worth.
+  3. At minimum, document that OTC-backed legs rely on `extendSettlementWindow`.
+
+<details><summary>test/audit/L31Round5PartialOTC.test.ts</summary>
+
+```ts
+import { expect } from "chai";
+import { ethers } from "hardhat";
+import { time } from "@nomicfoundation/hardhat-network-helpers";
+import { fullProtocolFixture, launchConfig, launchTerms } from "../../scripts/lib/local-protocol";
+
+// [L-31] re-check at 2d210db. OTC inventory now fills first, outside the
+// admin cap and the DEX slot, matching `schedule`. Also probes:
+//  - the stated residual (the OTC share of a mixed chunk is uncapped);
+//  - OTC inventory counted by `schedule` at start but withdrawn afterwards.
+
+const WETH = "0x4200000000000000000000000000000000000006";
+const HOUR = 3600;
+const INTERVAL = 23 * HOUR;
+const CAP = ethers.parseEther("0.1");
+
+describe("[L-31] round 5 (2d210db): partial OTC inventory and DEX slots", function () {
+  async function propose(f: any, target: string, data: string) {
+    await f.protocolAuthority.connect(f.deployer).propose(target, 0, data, 0, ethers.ZeroHash);
+    const id = await f.protocolAuthority.proposalCount();
+    await f.protocolAuthority.connect(f.protocolAuthoritySigner2).confirm(id);
+    await f.protocolAuthority.execute(id, data);
+  }
+
+  async function setup(otcETH = ethers.parseEther("0.05")) {
+    const f: any = await fullProtocolFixture(false, true);
+    const router = f.plazmLaunchRouter;
+    const plazm = await f.plazm.getAddress();
+    await propose(f, await router.getAddress(),
+      router.interface.encodeFunctionData("setDexSettlementPolicy", [plazm, CAP, INTERVAL]));
+    const offered = otcETH * 3n;
+    await f.plazm.mint(f.creator2.address, offered);
+    await f.plazm.connect(f.creator2).approve(await f.tokenOTC.getAddress(), offered);
+    await f.tokenOTC.connect(f.creator2).createOrder(plazm, WETH, offered, otcETH, (await time.latest()) + 40 * 86400, 0);
+    const orderId = await f.tokenOTC.nextOrderId?.().catch(() => undefined);
+
+    const raised = ethers.parseEther("1");
+    const config = await launchConfig(2, "Slots", "SLOT", {
+      lpCounterAsset: plazm, yieldRecipient: f.creator.address,
+      softCap: raised, hardCap: raised, maxContribution: raised,
+    });
+    await f.manager.connect(f.creator).createLaunchWithTerms(config, launchTerms({
+      liquidityDripBps: 2000, maxSwapSlippageBps: 150, executionCooldown: 21600,
+      routeHash: await router.approvedRouteHash(),
+    }));
+    await time.increaseTo(config.startTime);
+    await f.manager.connect(f.buyer).contribute(0, { value: raised });
+    const s = await router.getSettlement(0);
+    const deadline: bigint = await router.settlementCancellationTime(0);
+    return { f, router, s, deadline, otcETH, orderId };
+  }
+
+  const chunk = async (f: any, max = 0n) =>
+    f.manager.connect(f.keeper).executeBuiltSettlementChunk(0, max, (await time.latest()) + 600);
+  const waitSlot = async (router: any, late = 0) =>
+    time.increaseTo(Number((await router.getSettlement(0)).lastExecution) + INTERVAL + late);
+  const pending = async (router: any) => (await router.getSettlement(0)).pendingLiquidityETH as bigint;
+
+  it("round-4 PoC: default chunks now use exactly the 3 planned DEX slots", async function () {
+    const { f, router, s, deadline, otcETH } = await setup();
+    const planned = (s.initialLiquidityETH - otcETH + CAP - 1n) / CAP;
+    expect(planned).to.equal(3n);
+    const first = await pending(router);
+    await chunk(f);
+    console.log("      first (mixed) chunk     :", ethers.formatEther(first - (await pending(router))), "ETH (OTC", ethers.formatEther(otcETH), "+ cap", ethers.formatEther(CAP), ")");
+    let used = 1;
+    while ((await pending(router)) > 0n) { await waitSlot(router); await chunk(f); used++; }
+    expect(used).to.equal(3);
+    const done = await router.getSettlement(0);
+    console.log("      planned vs used slots   :", planned.toString(), "vs", used);
+    console.log("      slack at completion     :", Number(deadline - BigInt(done.lastExecution)) / HOUR, "h");
+  });
+
+  it("round-4 PoC: a keeper 2h late once now completes inside the window", async function () {
+    const { f, router, deadline } = await setup();
+    await chunk(f);
+    await waitSlot(router, 2 * HOUR); await chunk(f);
+    await waitSlot(router); await chunk(f);
+    const done = await router.getSettlement(0);
+    expect(done.pendingLiquidityETH).to.equal(0n);
+    expect(BigInt(done.lastExecution)).to.be.lt(deadline);
+    console.log("      slack at completion     :", Number(deadline - BigInt(done.lastExecution)) / HOUR, "h");
+  });
+
+  it("residual: the OTC share of a mixed chunk is outside the admin cap", async function () {
+    const otc = ethers.parseEther("0.15");
+    const { f, router } = await setup(otc);
+    const before = await pending(router);
+    await chunk(f);
+    const moved = before - (await pending(router));
+    console.log("      one mixed chunk         :", ethers.formatEther(moved), "ETH with cap", ethers.formatEther(CAP));
+    expect(moved).to.be.gt(CAP);
+    expect(moved).to.be.lte(otc + CAP);
+  });
+
+  it("OTC inventory counted at start, then cancelled by its maker, strands the settlement", async function () {
+    const otc = ethers.parseEther("0.2");
+    const { f, router, s, deadline } = await setup(otc);
+    const planned = (s.initialLiquidityETH - otc + CAP - 1n) / CAP;
+    const windowSlots = 1 + Number((deadline - BigInt(s.startedAt) - 1n) / BigInt(INTERVAL));
+    // Maker withdraws the inventory the schedule relied on, right after start.
+    const ids = await f.tokenOTC.getOrderIds(await f.plazm.getAddress(), WETH, 0, 10);
+    const id = Array.isArray(ids[0]) || typeof ids[0] === "object" ? ids[0][0] : ids[0];
+    await f.tokenOTC.connect(f.creator2).cancelOrder(id);
+    let used = 0;
+    while (true) {
+      if (used > 0) await waitSlot(router);
+      if (BigInt(await time.latest()) >= deadline) break;
+      await chunk(f); used++;
+      if ((await pending(router)) === 0n) break;
+    }
+    const left = await pending(router);
+    console.log("      opening leg / OTC / cap :", ethers.formatEther(s.initialLiquidityETH), "/", ethers.formatEther(otc), "/", ethers.formatEther(CAP));
+    console.log("      planned DEX slots       :", planned.toString(), "window slot openings:", windowSlots);
+    console.log("      DEX chunks executed     :", used, "pending at deadline:", ethers.formatEther(left), "ETH");
+    expect(left).to.be.gt(0n);
+    await expect(chunk(f)).to.be.revertedWith("PlazmRouter: settlement window elapsed");
+  });
+});
+```
+
+</details>
+
+
 # [I-01] Seed preflight checks liquidity but not V4 int128 currency amounts
 
 **Severity:** Informational  
 **Source finding:** `I-01`  
 **Source issue:** [#37 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/37)  
-**Audited baseline:** [`213a6dba`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/213a6dba2e2641804ed56555d4f6f763dbe95200)  
-**Remediation snapshot:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)
+**Audited baseline:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)  
+**Remediation snapshot:** [`2d210dbf`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/2d210dbfe293a00122de726848c47e4472733bfb)
 
 ## Description
 
@@ -3062,8 +4008,8 @@ require(
 **Severity:** Informational  
 **Source finding:** `I-02`  
 **Source issue:** [#42 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/42)  
-**Audited baseline:** [`213a6dba`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/213a6dba2e2641804ed56555d4f6f763dbe95200)  
-**Remediation snapshot:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)
+**Audited baseline:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)  
+**Remediation snapshot:** [`2d210dbf`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/2d210dbfe293a00122de726848c47e4472733bfb)
 
 ## Description
 
@@ -3125,8 +4071,8 @@ function pause() external {
 **Severity:** Informational  
 **Source finding:** `I-03`  
 **Source issue:** [#43 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/43)  
-**Audited baseline:** [`213a6dba`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/213a6dba2e2641804ed56555d4f6f763dbe95200)  
-**Remediation snapshot:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)
+**Audited baseline:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)  
+**Remediation snapshot:** [`2d210dbf`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/2d210dbfe293a00122de726848c47e4472733bfb)
 
 ## Description
 
@@ -3192,8 +4138,8 @@ Note (informational): `getLaunch().endTime` still returns the nominal end, so fr
 **Severity:** Informational  
 **Source finding:** `I-04`  
 **Source issue:** [#45 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/45)  
-**Audited baseline:** [`213a6dba`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/213a6dba2e2641804ed56555d4f6f763dbe95200)  
-**Remediation snapshot:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)
+**Audited baseline:** [`a4dee324`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)  
+**Remediation snapshot:** [`2d210dbf`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/2d210dbfe293a00122de726848c47e4472733bfb)
 
 ## Description
 
@@ -3249,11 +4195,13 @@ require(config.endTime <= config.startTime + MAX_SALE_DURATION, "Economics: sale
 
 # Conclusion
 
-The Plazm launch-path review identified **17 findings**: **2 Medium**, **11 Low**, and **4 Informational**. At remediation snapshot [`a4dee324e9206e1ddb249ddb3329db9a0712cfc7`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7), **15 findings are Fixed** and **2 are Partially Mitigated**.
+The Plazm launch-path review identified **21 findings**: **2 Medium**, **15 Low**, and **4 Informational**. At remediation snapshot [`2d210dbfe293a00122de726848c47e4472733bfb`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/2d210dbfe293a00122de726848c47e4472733bfb), **19 findings are Fixed** and **2 are Partially Mitigated**.
 
 The two residual items are:
 
-- **M-01 / source M-10 (#30):** the cooldown-progress and spare-slot changes prevent dust-sized calls from consuming a full slot, but repeated half-capacity calls can still exhaust the default settlement window under the reviewer-confirmed scheduling conditions.
 - **L-06 / source L-22 (#36):** the project-token side is bounded by the new maximum total-supply rule, while the counter-asset side still relies on WETH, PLAZM, and approved Build-on-Asset counters remaining below the V4 `int128` amount limit; that requirement is documented but not enforced on-chain.
+- **L-12 / source L-28 (#46):** minimum-size asks, accounting, and expired-order matching are fixed, but an attacker can still create 128 short-lived minimum-size asks to exhaust the scan bound and temporarily deny OTC routing until someone cancels them. The remaining impact is low and the DEX leg continues to work.
 
-The exact-snapshot unit-test step passed, but exact production coverage hit a Node.js heap out-of-memory failure and downstream replay/fork jobs were skipped. Those limitations remain part of the release risk and should not be interpreted as a clean full-CI attestation.
+Issue #49's original partial-OTC slot mismatch is fixed at the remediation snapshot. Its latest review records a separate residual condition in which a maker can withdraw OTC inventory after settlement planning; that condition relies on the spare slot or `extendSettlementWindow` and is retained in the finding evidence rather than misclassified as the original defect.
+
+The exact-snapshot contracts CI job failed at exact production coverage, while downstream fork/end-to-end jobs were skipped. Targeted issue-level regressions passed, including Base-fork verification for the reinvestment sandwich case. Those limitations remain part of the release risk and should not be interpreted as a clean full-CI attestation.

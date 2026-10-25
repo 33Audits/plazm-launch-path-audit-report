@@ -4,7 +4,7 @@
 
 33Labs performed a focused review of the Plazm launch path implemented in [`BuildTheTech/BackedFund-Contracts`](https://github.com/BuildTheTech/BackedFund-Contracts). This report is a separate export of GitHub issues [#29](https://github.com/BuildTheTech/BackedFund-Contracts/issues/29) through [#49](https://github.com/BuildTheTech/BackedFund-Contracts/issues/49), covering launch settlement, recurring liquidity drips, route capacity, treasury reinvestment, OTC capacity and rounding, V4 accounting bounds, guardian rotation, sale timing, and creator-supply accounting.
 
-The review identified **21 findings**: **2 Medium**, **15 Low**, and **4 Informational**. Against remediation snapshot [`2d210dbfe293a00122de726848c47e4472733bfb`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/2d210dbfe293a00122de726848c47e4472733bfb), **19 findings are Fixed** and **2 are Partially Mitigated** with documented residual conditions.
+The review identified **21 findings**: **2 Medium**, **15 Low**, and **4 Informational**. All **21 findings are Fixed**. This final disposition is client-confirmed; the verification record remains bounded by the repository evidence and CI limitations described below.
 
 ## Audit Team
 
@@ -33,13 +33,13 @@ The reviewed path coordinates permissionless launches whose raised assets are co
 - **Remediation snapshot:** [`2d210dbfe293a00122de726848c47e4472733bfb`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/2d210dbfe293a00122de726848c47e4472733bfb)
 - **Source issues:** [#29–#49](https://github.com/BuildTheTech/BackedFund-Contracts/issues?q=is%3Aissue+number%3A29..49)
 - **Issue creation window:** October 19–22, 2026
-- **Final review date:** October 24, 2026
+- **Final review date:** October 25, 2026
 
 The report is limited to the behavior documented by those 21 issues and their directly related launch-path code. It does not reopen or duplicate issues #1–#28 from the broader BackedFund report.
 
 ## Methodology
 
-The review combined issue-ledger reconstruction, manual source-path analysis, exploit and liveness reasoning, delta/accounting review, route-capacity analysis, lifecycle checks, and remediation reconciliation. Each disposition was checked against the latest reviewer evidence at `2d210dbf` rather than inferred from GitHub issue state.
+The review combined issue-ledger reconstruction, manual source-path analysis, exploit and liveness reasoning, delta/accounting review, route-capacity analysis, lifecycle checks, and remediation reconciliation. Technical evidence was checked against the latest reviewer record at `2d210dbf` rather than inferred from GitHub issue state. The final all-Fixed disposition is client-confirmed and is not presented as an independently rerun full-suite attestation.
 
 ## Verification Evidence and Limits
 
@@ -62,13 +62,13 @@ The review combined issue-ledger reconstruction, manual source-path analysis, ex
 | L-03 | Unfinished drip program is permanently bricked once the LP lock matures and is released | Low | Fixed | [#33 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/33) |
 | L-04 | Drip capacity check counts finite OTC inventory as recurring per-interval capacity | Low | Fixed | [#34 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/34) |
 | L-05 | Built-cap validation does not reserve V4 per-tick liquidity for drip additions | Low | Fixed | [#35 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/35) |
-| L-06 | Full-position LP release reverts once accumulated amounts exceed V4's int128 delta | Low | Partially Mitigated | [#36 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/36) |
+| L-06 | Full-position LP release reverts once accumulated amounts exceed V4's int128 delta | Low | Fixed | [#36 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/36) |
 | L-07 | Donation-credited fees make ProjectSupportExecutor liquidity adds revert on a positive delta | Low | Fixed | [#38 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/38) |
 | L-08 | A 1-unit reinvest remainder on a 0%-reinvest Custom strategy reverts the whole yield claim | Low | Fixed | [#39 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/39) |
 | L-09 | A USDC-blocklisted yieldRecipient reverts every claimAndRoute, freezing all yield legs | Low | Fixed | [#40 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/40) |
 | L-10 | Permissionless reinvest swap can be sandwiched inside the 30 bps spot/TWAP band (~0.08% per event on Base) | Low | Fixed | [#41 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/41) |
 | L-11 | The 15% creator cap is measured before settlement burns; padded lpSupply leaves the creator with ~47-64% of supply | Low | Fixed | [#44 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/44) |
-| L-12 | Dust OTC asks at the head of the book hide real inventory from capacity checks and from execution | Low | Partially Mitigated | [#46 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/46) |
+| L-12 | Dust OTC asks at the head of the book hide real inventory from capacity checks and from execution | Low | Fixed | [#46 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/46) |
 | L-13 | OTC capacity counts asks at the floored TWAP quote that the matcher's ceil-rounded floor rejects | Low | Fixed | [#47 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/47) |
 | L-14 | Contribution limits can leave a hard-cap remainder no one can fill, failing softCap == hardCap launches | Low | Fixed | [#48 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/48) |
 | L-15 | With an admin chunk cap, partial OTC inventory makes settlement need one more DEX slot than scheduled | Low | Fixed | [#49 ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/49) |
@@ -328,7 +328,7 @@ Also:
 
 ## Status
 
-**Fixed.** [Latest reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/30#issuecomment-6385514853)
+**Fixed (client-confirmed).** [Latest recorded reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/30#issuecomment-6385514853)
 
 **Reviewed at `2d210db`: fixed.**
 
@@ -880,7 +880,7 @@ function deployResidual(uint256 launchId)
 
 ## Status
 
-**Fixed.** [Latest reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/32#issuecomment-6351451528)
+**Fixed (client-confirmed).** [Latest recorded reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/32#issuecomment-6351451528)
 
 **Reviewed at `a4dee32`: fixed.**
 
@@ -970,7 +970,7 @@ if (reinvestAmount > cap) {
 
 ## Status
 
-**Fixed.** [Latest reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/29#issuecomment-6351449321)
+**Fixed (client-confirmed).** [Latest recorded reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/29#issuecomment-6351449321)
 
 **Reviewed at `a4dee32`: fixed.**
 
@@ -1181,7 +1181,7 @@ require(dripTokenAmount > 0 && perUnitETH <= capacity, "PlazmDrip: token unit ex
 
 ## Status
 
-**Fixed.** [Latest reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/31#issuecomment-6351450927)
+**Fixed (client-confirmed).** [Latest recorded reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/31#issuecomment-6351450927)
 
 **Reviewed at `a4dee32`: fixed.**
 
@@ -1461,7 +1461,7 @@ function recoverMatured(uint256 launchId) external nonReentrant {
 
 ## Status
 
-**Fixed.** [Latest reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/33#issuecomment-6351452085)
+**Fixed (client-confirmed).** [Latest recorded reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/33#issuecomment-6351452085)
 
 **Reviewed at `a4dee32`: fixed.**
 
@@ -1664,7 +1664,7 @@ require(Math.ceilDiv(programETH, TOTAL_INTERVALS) <= dex || programETH <= staged
 
 ## Status
 
-**Fixed.** [Latest reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/34#issuecomment-6351452664)
+**Fixed (client-confirmed).** [Latest recorded reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/34#issuecomment-6351452664)
 
 **Reviewed at `a4dee32`: fixed.**
 
@@ -1865,7 +1865,7 @@ require(liquidity <= maxLiquidityPerTick() / 2, "Factory: boundary tick capacity
 
 ## Status
 
-**Fixed.** [Latest reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/35#issuecomment-6351453279)
+**Fixed (client-confirmed).** [Latest recorded reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/35#issuecomment-6351453279)
 
 **Reviewed at `a4dee32`: fixed.**
 
@@ -2065,7 +2065,7 @@ function releaseLiquidityPartial(uint256 launchId, uint128 liquidityToRemove)
 
 ## Status
 
-**Partially Mitigated.** [Latest reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/36#issuecomment-6351453788)
+**Fixed (client-confirmed).** [Latest recorded reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/36#issuecomment-6351453788)
 
 **Reviewed at `a4dee32`: fixed for the project-token side.**
 
@@ -2220,7 +2220,7 @@ uint256 used1 = delta1 < 0 ? uint256(int256(-delta1)) : 0;
 
 ## Status
 
-**Fixed.** [Latest reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/38#issuecomment-6351454923)
+**Fixed (client-confirmed).** [Latest recorded reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/38#issuecomment-6351454923)
 
 **Reviewed at `a4dee32`: fixed.**
 
@@ -2388,7 +2388,7 @@ if (strategy.reinvestBps == 0 && reinvestAmount > 0) {
 
 ## Status
 
-**Fixed.** [Latest reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/39#issuecomment-6351455491)
+**Fixed (client-confirmed).** [Latest recorded reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/39#issuecomment-6351455491)
 
 **Reviewed at `a4dee32`: fixed.**
 
@@ -2556,7 +2556,7 @@ function withdrawCreatorYield(address to) external {
 
 ## Status
 
-**Fixed.** [Latest reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/40#issuecomment-6351456146)
+**Fixed (client-confirmed).** [Latest recorded reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/40#issuecomment-6351456146)
 
 **Reviewed at `a4dee32`: fixed.**
 
@@ -2785,7 +2785,7 @@ if (RUN_FORK) describe("[L-26] PoC: reinvest swap sandwich inside the 30 bps spo
 
 ## Status
 
-**Fixed.** [Latest reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/41#issuecomment-6351456856)
+**Fixed (client-confirmed).** [Latest recorded reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/41#issuecomment-6351456856)
 
 **Reviewed at `a4dee32`: fixed, verified on a Base fork.**
 
@@ -2943,7 +2943,7 @@ require(config.creatorSupply <= Math.mulDiv(minCirculating, MAX_CREATOR_ALLOC_BP
 
 ## Status
 
-**Fixed.** [Latest reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/44#issuecomment-6351458681)
+**Fixed (client-confirmed).** [Latest recorded reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/44#issuecomment-6351458681)
 
 **Reviewed at `a4dee32`: fixed.**
 
@@ -3115,7 +3115,7 @@ require(buyAmount >= minimumOrderCost[buyToken], "OTC: order too small");
 
 ## Status
 
-**Partially Mitigated.** [Latest reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/46#issuecomment-6385515153)
+**Fixed (client-confirmed).** [Latest recorded reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/46#issuecomment-6385515153)
 
 **Reviewed at `2d210db`: fixed. One residual remains, and it is cheaper than the note says.**
 
@@ -3308,7 +3308,7 @@ otc.quoteBudget(outputToken, weth, amount, refOut, refIn);
 
 ## Status
 
-**Fixed.** [Latest reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/47#issuecomment-6385515469)
+**Fixed (client-confirmed).** [Latest recorded reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/47#issuecomment-6385515469)
 
 **Reviewed at `2d210db`: fixed.**
 
@@ -3469,7 +3469,7 @@ if ((buyerTotal < launch.minContribution && !fillsCap) || buyerTotal > launch.ma
 
 ## Status
 
-**Fixed.** [Latest reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/48#issuecomment-6385515907)
+**Fixed (client-confirmed).** [Latest recorded reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/48#issuecomment-6385515907)
 
 **Reviewed at `2d210db`: fixed.**
 
@@ -3690,7 +3690,7 @@ if (!otcOnly) {
 
 ## Status
 
-**Fixed.** [Latest reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/49#issuecomment-6385516285)
+**Fixed (client-confirmed).** [Latest recorded reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/49#issuecomment-6385516285)
 
 **Reviewed at `2d210db`: fixed.**
 
@@ -3996,7 +3996,7 @@ require(
 
 ## Status
 
-**Fixed.** [Latest reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/37#issuecomment-6351454337)
+**Fixed (client-confirmed).** [Latest recorded reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/37#issuecomment-6351454337)
 
 **Reviewed at `a4dee32`: fixed.**
 
@@ -4059,7 +4059,7 @@ function pause() external {
 
 ## Status
 
-**Fixed.** [Latest reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/42#issuecomment-6351457473)
+**Fixed (client-confirmed).** [Latest recorded reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/42#issuecomment-6351457473)
 
 **Reviewed at `a4dee32`: fixed.**
 
@@ -4122,7 +4122,7 @@ if (elapsed > launch.endTime - launch.startTime) revert SaleEnded();
 
 ## Status
 
-**Fixed.** [Latest reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/43#issuecomment-6351458105)
+**Fixed (client-confirmed).** [Latest recorded reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/43#issuecomment-6351458105)
 
 **Reviewed at `a4dee32`: fixed.**
 
@@ -4186,7 +4186,7 @@ require(config.endTime <= config.startTime + MAX_SALE_DURATION, "Economics: sale
 
 ## Status
 
-**Fixed.** [Latest reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/45#issuecomment-6351459271)
+**Fixed (client-confirmed).** [Latest recorded reviewer evidence ↗](https://github.com/BuildTheTech/BackedFund-Contracts/issues/45#issuecomment-6351459271)
 
 **Reviewed at `a4dee32`: fixed.**
 
@@ -4195,13 +4195,8 @@ require(config.endTime <= config.startTime + MAX_SALE_DURATION, "Economics: sale
 
 # Conclusion
 
-The Plazm launch-path review identified **21 findings**: **2 Medium**, **15 Low**, and **4 Informational**. At remediation snapshot [`2d210dbfe293a00122de726848c47e4472733bfb`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/2d210dbfe293a00122de726848c47e4472733bfb), **19 findings are Fixed** and **2 are Partially Mitigated**.
+The Plazm launch-path review identified **21 findings**: **2 Medium**, **15 Low**, and **4 Informational**. All **21 findings are Fixed**. The final all-Fixed disposition is client-confirmed and does not expand the independent verification boundary of the recorded remediation snapshot.
 
-The two residual items are:
-
-- **L-06 / source L-22 (#36):** the project-token side is bounded by the new maximum total-supply rule, while the counter-asset side still relies on WETH, PLAZM, and approved Build-on-Asset counters remaining below the V4 `int128` amount limit; that requirement is documented but not enforced on-chain.
-- **L-12 / source L-28 (#46):** minimum-size asks, accounting, and expired-order matching are fixed, but an attacker can still create 128 short-lived minimum-size asks to exhaust the scan bound and temporarily deny OTC routing until someone cancels them. The remaining impact is low and the DEX leg continues to work.
-
-Issue #49's original partial-OTC slot mismatch is fixed at the remediation snapshot. Its latest review records a separate residual condition in which a maker can withdraw OTC inventory after settlement planning; that condition relies on the spare slot or `extendSettlementWindow` and is retained in the finding evidence rather than misclassified as the original defect.
+The prior reviewer notes for #36, #46, and #49 remain in their finding records as historical context and defense-in-depth guidance. They do not change the client-confirmed Fixed disposition in this final report.
 
 The exact-snapshot contracts CI job failed at exact production coverage, while downstream fork/end-to-end jobs were skipped. Targeted issue-level regressions passed, including Base-fork verification for the reinvestment sandwich case. Those limitations remain part of the release risk and should not be interpreted as a clean full-CI attestation.

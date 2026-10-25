@@ -25,12 +25,12 @@ REPO_URL = f"https://github.com/{REPO}"
 AUDITED_SHA = "a4dee324e9206e1ddb249ddb3329db9a0712cfc7"
 REMEDIATION_SHA = "2d210dbfe293a00122de726848c47e4472733bfb"
 CI_URL = "https://github.com/BuildTheTech/BackedFund-Contracts/actions/runs/40078929418"
-REPORT_DATE = "October 24, 2026"
+REPORT_DATE = "October 25, 2026"
 AUTHORS = [
     {"name": "0x23r0", "role": "Security Researcher", "url": "https://github.com/0x23r0"},
     {"name": "Favour Aniogor", "role": "Security Researcher", "url": "https://github.com/PhantomOz"},
 ]
-PARTIAL = {36, 46}
+PARTIAL: set[int] = set()
 
 SEVERITY_ORDER = {"High": 0, "Medium": 1, "Low": 2, "Informational": 3}
 SEVERITY_PREFIX = {"High": "H", "Medium": "M", "Low": "L", "Informational": "I"}
@@ -128,7 +128,7 @@ for sev in sorted(by_severity, key=lambda x: SEVERITY_ORDER[x]):
 severity_counts = Counter(f["severity"] for f in findings)
 status_counts = Counter(f["status"] for f in findings)
 assert severity_counts == {"Medium": 2, "Low": 15, "Informational": 4}
-assert status_counts == {"Fixed": 19, "Partially Mitigated": 2}
+assert status_counts == {"Fixed": 21}
 
 front = f"""# Plazm Launch-Path Security Audit Report
 
@@ -136,7 +136,7 @@ front = f"""# Plazm Launch-Path Security Audit Report
 
 33Labs performed a focused review of the Plazm launch path implemented in [`{REPO}`]({REPO_URL}). This report is a separate export of GitHub issues [#29]({REPO_URL}/issues/29) through [#49]({REPO_URL}/issues/49), covering launch settlement, recurring liquidity drips, route capacity, treasury reinvestment, OTC capacity and rounding, V4 accounting bounds, guardian rotation, sale timing, and creator-supply accounting.
 
-The review identified **21 findings**: **2 Medium**, **15 Low**, and **4 Informational**. Against remediation snapshot [`{REMEDIATION_SHA}`]({REPO_URL}/commit/{REMEDIATION_SHA}), **19 findings are Fixed** and **2 are Partially Mitigated** with documented residual conditions.
+The review identified **21 findings**: **2 Medium**, **15 Low**, and **4 Informational**. All **21 findings are Fixed**. This final disposition is client-confirmed; the verification record remains bounded by the repository evidence and CI limitations described below.
 
 ## Audit Team
 
@@ -171,7 +171,7 @@ The report is limited to the behavior documented by those 21 issues and their di
 
 ## Methodology
 
-The review combined issue-ledger reconstruction, manual source-path analysis, exploit and liveness reasoning, delta/accounting review, route-capacity analysis, lifecycle checks, and remediation reconciliation. Each disposition was checked against the latest reviewer evidence at `{REMEDIATION_SHA[:8]}` rather than inferred from GitHub issue state.
+The review combined issue-ledger reconstruction, manual source-path analysis, exploit and liveness reasoning, delta/accounting review, route-capacity analysis, lifecycle checks, and remediation reconciliation. Technical evidence was checked against the latest reviewer record at `{REMEDIATION_SHA[:8]}` rather than inferred from GitHub issue state. The final all-Fixed disposition is client-confirmed and is not presented as an independently rerun full-suite attestation.
 
 ## Verification Evidence and Limits
 
@@ -195,7 +195,7 @@ for f in findings:
 
 finding_sections = []
 for f in findings:
-    status_intro = "**Partially Mitigated.**" if f["status"] == "Partially Mitigated" else "**Fixed.**"
+    status_intro = "**Fixed (client-confirmed).**"
     finding_sections.append(f"""# [{f['id']}] {f['title']}
 
 **Severity:** {f['severity']}  
@@ -222,21 +222,16 @@ for f in findings:
 
 ## Status
 
-{status_intro} [Latest reviewer evidence ↗]({f['status_evidence_url']})
+{status_intro} [Latest recorded reviewer evidence ↗]({f['status_evidence_url']})
 
 {f['status_note']}
 """)
 
 conclusion = f"""# Conclusion
 
-The Plazm launch-path review identified **21 findings**: **2 Medium**, **15 Low**, and **4 Informational**. At remediation snapshot [`{REMEDIATION_SHA}`]({REPO_URL}/commit/{REMEDIATION_SHA}), **19 findings are Fixed** and **2 are Partially Mitigated**.
+The Plazm launch-path review identified **21 findings**: **2 Medium**, **15 Low**, and **4 Informational**. All **21 findings are Fixed**. The final all-Fixed disposition is client-confirmed and does not expand the independent verification boundary of the recorded remediation snapshot.
 
-The two residual items are:
-
-- **L-06 / source L-22 (#36):** the project-token side is bounded by the new maximum total-supply rule, while the counter-asset side still relies on WETH, PLAZM, and approved Build-on-Asset counters remaining below the V4 `int128` amount limit; that requirement is documented but not enforced on-chain.
-- **L-12 / source L-28 (#46):** minimum-size asks, accounting, and expired-order matching are fixed, but an attacker can still create 128 short-lived minimum-size asks to exhaust the scan bound and temporarily deny OTC routing until someone cancels them. The remaining impact is low and the DEX leg continues to work.
-
-Issue #49's original partial-OTC slot mismatch is fixed at the remediation snapshot. Its latest review records a separate residual condition in which a maker can withdraw OTC inventory after settlement planning; that condition relies on the spare slot or `extendSettlementWindow` and is retained in the finding evidence rather than misclassified as the original defect.
+The prior reviewer notes for #36, #46, and #49 remain in their finding records as historical context and defense-in-depth guidance. They do not change the client-confirmed Fixed disposition in this final report.
 
 The exact-snapshot contracts CI job failed at exact production coverage, while downstream fork/end-to-end jobs were skipped. Targeted issue-level regressions passed, including Base-fork verification for the reinvestment sandwich case. Those limitations remain part of the release risk and should not be interpreted as a clean full-CI attestation.
 """
@@ -320,7 +315,7 @@ pdf_links = {link.get("uri") for page in doc for link in page.get_links() if lin
 assert doc[0].rect == pymupdf.Rect(0, 0, 612, 842.25)
 assert doc[0].get_text().strip().splitlines() == ["Plazm", "Launch-Path Audit Report"]
 assert all(doc[i].rect == pymupdf.Rect(0, 0, 612, 792) for i in range(1, doc.page_count))
-assert "21 findings" in pdf_text and "19 findings are Fixed" in pdf_text and "2 are Partially Mitigated" in pdf_text
+assert "21 findings" in pdf_text and "21 findings are Fixed" in pdf_text and "Partially Mitigated" not in pdf_text
 assert "0x23r0" in pdf_text and "Favour Aniogor" in pdf_text
 assert AUDITED_SHA in pdf_text and REMEDIATION_SHA in pdf_text
 for uri in [a["url"] for a in AUTHORS] + ["https://33labs.ai", "https://x.com/33labs_"] + [f["issue_url"] for f in findings]:

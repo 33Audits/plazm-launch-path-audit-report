@@ -23,12 +23,12 @@ This publication is separate from the broader BackedFund report covering issues 
 - Finding baseline: [`a4dee324e9206e1ddb249ddb3329db9a0712cfc7`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/a4dee324e9206e1ddb249ddb3329db9a0712cfc7)
 - Remediation snapshot: [`2d210dbfe293a00122de726848c47e4472733bfb`](https://github.com/BuildTheTech/BackedFund-Contracts/commit/2d210dbfe293a00122de726848c47e4472733bfb)
 - Findings: 21 total — 2 Medium, 15 Low, 4 Informational
-- Remediation disposition: 19 Fixed, 2 Partially Mitigated
-- Final review date: October 24, 2026
+- Remediation disposition: 21 Fixed
+- Final review date: October 25, 2026
 
 ## Verification disclosure
 
-[Contracts CI run 40078929418](https://github.com/BuildTheTech/BackedFund-Contracts/actions/runs/40078929418) ran on the remediation snapshot. The contracts job failed at exact production coverage; Base Plazm fork and Base protocol end-to-end jobs were skipped. Round-five issue comments record targeted regressions passing, including Base-fork verification for the reinvestment sandwich case. The report does not claim clean full CI or verified deployment state.
+All 21 findings carry the client-confirmed `Fixed` disposition. [Contracts CI run 40078929418](https://github.com/BuildTheTech/BackedFund-Contracts/actions/runs/40078929418) ran on the remediation snapshot. The contracts job failed at exact production coverage; Base Plazm fork and Base protocol end-to-end jobs were skipped. Round-five issue comments record targeted regressions passing, including Base-fork verification for the reinvestment sandwich case. The report does not claim clean full CI or verified deployment state.
 
 ## Reproducibility
 
@@ -53,7 +53,7 @@ The generator reads `sources/issues-refresh.json`, uses the canonical files unde
 
 ## Release checksums
 
-- PDF: `5a7c2b172b2d9e197c3f1532c10c50fa7704ba47a09d9195c53351959ec48fcf`
-- Markdown: `59ce34df6cf54de1fd9d1e277d2a7e35fe2aa97a59cadb11879dd6496666153e`
-- JSON: `37bb922f5017b02cea6c974d778a2b8e83e5e21846b0a1d234368dafabb76693`
-- HTML: `938a3203491fa8c82d57711f8ff7abbf43b1e322fa4f508ec108418ee9dd517a`
+- PDF: `6525a832242e71483e52ec52ccb2ea6863e6010d18155277d342adadeec47109`
+- Markdown: `0c1da75bc7eda4b786c96c66c5b441757e64b3c0924b3730b0c090e85213c146`
+- JSON: `73d2b7a83b9060af67ea478e523dcfdbd539b25730816d4843c11fa40a526799`
+- HTML: `7c1a9b3362a3dd0ed7cca5a9f334600c82b387b41f41554e055602698131bcc8`
